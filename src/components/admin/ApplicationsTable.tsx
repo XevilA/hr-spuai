@@ -32,6 +32,8 @@ type Application = {
   status: string;
   cv_file_path: string | null;
   created_at: string;
+  match_percentage: number | null;
+  ai_evaluation: string | null;
 };
 
 export const ApplicationsTable = () => {
@@ -179,6 +181,8 @@ export const ApplicationsTable = () => {
               <TableHead>Email</TableHead>
               <TableHead>Year</TableHead>
               <TableHead>Faculty</TableHead>
+              <TableHead>Match %</TableHead>
+              <TableHead>AI Evaluation</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>CV</TableHead>
               <TableHead>Date</TableHead>
@@ -192,6 +196,20 @@ export const ApplicationsTable = () => {
                 <TableCell>{app.email}</TableCell>
                 <TableCell>Year {app.university_year}</TableCell>
                 <TableCell className="text-sm">{app.faculty}</TableCell>
+                <TableCell>
+                  <span className={`font-bold ${
+                    (app.match_percentage || 0) >= 70 ? 'text-green-600' :
+                    (app.match_percentage || 0) >= 50 ? 'text-yellow-600' :
+                    'text-red-600'
+                  }`}>
+                    {app.match_percentage ? `${app.match_percentage}%` : '-'}
+                  </span>
+                </TableCell>
+                <TableCell className="max-w-xs">
+                  <p className="text-sm text-muted-foreground line-clamp-2">
+                    {app.ai_evaluation || 'Pending...'}
+                  </p>
+                </TableCell>
                 <TableCell>
                   <Select
                     value={app.status}

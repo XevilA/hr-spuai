@@ -1,52 +1,52 @@
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { ExternalLink } from "lucide-react";
-import project1 from "@/assets/project-1.jpg";
-import project2 from "@/assets/project-2.jpg";
-import project3 from "@/assets/project-3.jpg";
-import project4 from "@/assets/project-4.jpg";
-import project5 from "@/assets/project-5.jpg";
-import project6 from "@/assets/project-6.jpg";
+import { supabase } from "@/integrations/supabase/client";
 
-const projects = [
-  {
-    title: "AI Chatbot Platform",
-    description: "Intelligent conversational AI for customer service",
-    image: project1,
-    tags: ["NLP", "Machine Learning"],
-  },
-  {
-    title: "Computer Vision System",
-    description: "Advanced image recognition and analysis",
-    image: project2,
-    tags: ["Computer Vision", "Deep Learning"],
-  },
-  {
-    title: "Data Analytics Dashboard",
-    description: "Real-time ML-powered insights",
-    image: project3,
-    tags: ["Analytics", "Visualization"],
-  },
-  {
-    title: "AI Assistant Robot",
-    description: "Autonomous robotic assistance system",
-    image: project4,
-    tags: ["Robotics", "AI"],
-  },
-  {
-    title: "NLP Text Analyzer",
-    description: "Advanced natural language processing",
-    image: project5,
-    tags: ["NLP", "Sentiment Analysis"],
-  },
-  {
-    title: "Neural Network Viz",
-    description: "Deep learning architecture visualization",
-    image: project6,
-    tags: ["Deep Learning", "Visualization"],
-  },
-];
+interface Project {
+  id: string;
+  title: string;
+  description: string;
+  image_url: string;
+  tags: string[];
+}
 
 export const Showcase = () => {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchProjects();
+  }, []);
+
+  const fetchProjects = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <p className="text-muted-foreground">Loading projects...</p>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -68,7 +68,7 @@ export const Showcase = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
             <motion.div
-              key={index}
+              key={project.id}
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
@@ -77,7 +77,7 @@ export const Showcase = () => {
             >
               <div className="relative h-64 overflow-hidden">
                 <img
-                  src={project.image}
+                  src={project.image_url}
                   alt={project.title}
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />

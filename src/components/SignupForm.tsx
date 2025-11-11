@@ -128,7 +128,7 @@ export const SignupForm = () => {
       if (uploadError) throw uploadError;
 
       // Insert application
-      const { error: insertError } = await supabase.from("applications").insert({
+      const { data: insertData, error: insertError } = await supabase.from("applications").insert({
         full_name: data.fullName,
         nickname: data.nickname,
         university_year: parseInt(data.universityYear),
@@ -141,9 +141,34 @@ export const SignupForm = () => {
         portfolio_url: data.portfolioUrl || null,
         motivation: data.motivation,
         cv_file_path: fileName,
-      });
+      }).select();
 
       if (insertError) throw insertError;
+
+      // Send confirmation email
+      try {
+        await supabase.functions.invoke("send-application-email", {
+          body: {
+            to: data.email,
+            fullName: data.fullName,
+          },
+        });
+      } catch (emailError) {
+        console.error("Email send error:", emailError);
+        // Don't fail the application if email fails
+      }
+
+      // Trigger AI evaluation
+      try {
+        if (insertData && insertData[0]?.id) {
+          await supabase.functions.invoke("evaluate-application", {
+            body: { applicationId: insertData[0].id },
+          });
+        }
+      } catch (evalError) {
+        console.error("Evaluation error:", evalError);
+        // Don't fail the application if evaluation fails
+      }
 
       // Success! Trigger confetti
       confetti({

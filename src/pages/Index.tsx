@@ -6,6 +6,7 @@ import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
 import { StickyApplyButton } from "@/components/StickyApplyButton";
 import { SignupForm } from "@/components/SignupForm";
+import { ChatbotButton } from "@/components/ChatbotButton";
 
 const Index = () => {
   return (
@@ -87,6 +88,7 @@ const Index = () => {
       <Benefits />
       <Testimonials />
       <Footer />
+      <ChatbotButton />
     </div>
   );
 };

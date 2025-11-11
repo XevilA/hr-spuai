@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ApplicationsTable } from "@/components/admin/ApplicationsTable";
 import { UserRolesManager } from "@/components/admin/UserRolesManager";
+import { ProjectsManager } from "@/components/admin/ProjectsManager";
+import { PositionsManager } from "@/components/admin/PositionsManager";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -96,6 +98,8 @@ const Admin = () => {
           <Tabs defaultValue="applications" className="space-y-6">
             <TabsList>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="projects">Projects</TabsTrigger>
+              <TabsTrigger value="positions">Positions</TabsTrigger>
               {userRole === "super_admin" && (
                 <TabsTrigger value="users">User Management</TabsTrigger>
               )}
@@ -103,6 +107,14 @@ const Admin = () => {
 
             <TabsContent value="applications">
               <ApplicationsTable />
+            </TabsContent>
+
+            <TabsContent value="projects">
+              <ProjectsManager />
+            </TabsContent>
+
+            <TabsContent value="positions">
+              <PositionsManager />
             </TabsContent>
 
             {userRole === "super_admin" && (
