@@ -7,6 +7,7 @@ import { Footer } from "@/components/Footer";
 import { ArrowLeft, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { ChatbotButton } from "@/components/ChatbotButton";
+import Navbar from "@/components/Navbar";
 
 interface Position {
   id: string;
@@ -49,8 +50,9 @@ const Positions = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Navbar />
       {/* Header */}
-      <div className="bg-midnight-blue py-20">
+      <div className="bg-midnight-blue py-20 pt-32">
         <div className="container mx-auto px-4">
           <Button
             variant="ghost"

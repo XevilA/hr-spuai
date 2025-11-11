@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import Navbar from "@/components/Navbar";
 import { Hero } from "@/components/Hero";
 import { Showcase } from "@/components/Showcase";
 import { Benefits } from "@/components/Benefits";
@@ -10,6 +11,7 @@ import { ChatbotButton } from "@/components/ChatbotButton";
 const Index = () => {
   return (
     <div className="min-h-screen">
+      <Navbar />
       <Hero />
       <Showcase />
       
