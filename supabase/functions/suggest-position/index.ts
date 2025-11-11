@@ -12,7 +12,7 @@ serve(async (req) => {
   }
 
   try {
-    const { fullName, faculty, major, universityYear, motivation } = await req.json();
+    const { fullName, faculty, major, universityYear, interestsSkills, motivation } = await req.json();
 
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -49,12 +49,13 @@ Applicant Profile:
 - Faculty: ${faculty}
 - Major: ${major}
 - Year: ${universityYear}
+- Interests & Skills: ${interestsSkills || "Not specified"}
 - Motivation: ${motivation}
 
 Available Positions:
 ${positionsText}
 
-Analyze the applicant's background and motivation, then return ONLY the number of the most suitable position (1-${positions.length}). Consider their major, year level, and interests expressed in their motivation.`;
+Analyze the applicant's background, interests, skills, and motivation, then return ONLY the number of the most suitable position (1-${positions.length}). Consider their major, year level, technical skills, and interests expressed.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

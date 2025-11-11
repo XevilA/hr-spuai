@@ -24,6 +24,7 @@ export type Database = {
           full_name: string
           id: string
           instagram: string | null
+          interests_skills: string | null
           line_id: string | null
           major: string
           match_percentage: number | null
@@ -45,6 +46,7 @@ export type Database = {
           full_name: string
           id?: string
           instagram?: string | null
+          interests_skills?: string | null
           line_id?: string | null
           major: string
           match_percentage?: number | null
@@ -66,6 +68,7 @@ export type Database = {
           full_name?: string
           id?: string
           instagram?: string | null
+          interests_skills?: string | null
           line_id?: string | null
           major?: string
           match_percentage?: number | null
