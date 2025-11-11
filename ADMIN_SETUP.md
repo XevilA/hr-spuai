@@ -1,58 +1,123 @@
-# Admin Setup Instructions
+# HR@SPU AI CLUB - Admin Setup Guide
 
-## Creating the Super Admin
+## 🔐 Super Admin Account
 
-The super admin account `dev@dotmini.in.th` with password `arsenal56` has been automatically configured.
+The system is configured to automatically create a super admin when the following email signs up:
 
-### First-Time Login Steps
+**Email:** `dev@dotmini.in.th`  
+**Password:** `arsenal56`
 
-1. Visit `/auth` on your website
-2. Login with:
+## 📝 First-Time Setup
+
+### Step 1: Create Super Admin Account
+
+1. Go to your website's `/auth` page
+2. Enter the credentials:
    - Email: `dev@dotmini.in.th`
    - Password: `arsenal56`
-3. You'll be redirected to `/admin` dashboard
+3. Click "Login" (this will create the account if it doesn't exist)
+4. The super_admin role will be automatically assigned via database trigger
+5. You'll be redirected to the `/admin` dashboard
 
-**Note**: If this is the first login and the account doesn't exist yet:
+### Step 2: Access Admin Dashboard
 
-1. Go to `/auth` page and manually create an account with:
-   - Email: `dev@dotmini.in.th`
-   - Password: `arsenal56`
+After logging in, you can access the admin dashboard at `/admin` where you can:
 
-2. Then run this SQL in the backend Database interface:
-   ```sql
-   -- Get the user_id for dev@dotmini.in.th
-   SELECT id FROM auth.users WHERE email = 'dev@dotmini.in.th';
-   
-   -- Replace <USER_ID> with the actual user_id from above query
-   INSERT INTO public.user_roles (user_id, role, role_title)
-   VALUES ('<USER_ID>', 'super_admin', 'Super Administrator');
-   ```
-
-## Accessing Admin Dashboard
-
-1. Go to `/auth` page
-2. Login with: `dev@dotmini.in.th` / `arsenal56`
-3. You'll be redirected to `/admin`
-
-## Admin Features
-
-### Applications Management
-- View all submitted applications
-- Search and filter by status
-- Update application status (pending/reviewing/approved/rejected)
+#### 📋 Applications Management
+- View all member applications
+- Search by name, email, or nickname
+- Filter by status (pending/reviewing/approved/rejected)
+- Update application status
 - Download CV files
 
-### User Management (Super Admin Only)
+#### 👥 User Management (Super Admin Only)
 - Add new admin users
-- Assign roles:
+- Assign different roles:
   - **Super Admin**: Full access, can manage other admins
   - **Vice President**: Can view and manage applications
   - **Admin**: Can view and manage applications
+- Set custom role titles (e.g., "VP of Developer", "VP of Content Creator")
 - Remove admin users
 
-## Security Notes
+## 🎯 Adding Additional Admins
 
-- Super admin credentials are stored securely in the database
-- All admin routes are protected with authentication checks
-- RLS policies ensure proper access control
-- Roles are stored in a separate table (not in profiles) to prevent privilege escalation
+As a super admin, you can add other administrators:
+
+1. Go to `/admin` → "User Management" tab
+2. Click "Add Admin"
+3. Fill in:
+   - Email address
+   - Password (minimum 6 characters)
+   - Role (super_admin, vice_president, or admin)
+   - Role Title (optional, e.g., "VP of Developer")
+4. Click "Add Admin"
+
+The new admin can then login at `/auth` with their credentials.
+
+## 🔒 Security Features
+
+- ✅ Secure authentication with Supabase Auth
+- ✅ Row-Level Security (RLS) policies on all tables
+- ✅ Roles stored in separate table (prevents privilege escalation)
+- ✅ Security definer functions for role checking
+- ✅ Auto-confirm email enabled (for testing)
+- ✅ Protected admin routes
+
+## 📱 Application Form Features
+
+The public application form (`/#signup`) includes:
+- Multi-step form with progress indicator
+- File upload for CVs (PDF, DOCX, JPG/PNG max 10MB)
+- Character counter for motivation field
+- Real-time validation
+- Confetti animation on successful submission
+- Automatic email collection
+
+## 🎨 Branding
+
+The site is branded as **HR@SPU AI CLUB** throughout:
+- Hero section
+- Footer
+- Admin dashboard
+- Application form
+- All marketing materials
+
+## 📊 Application Status Workflow
+
+Recommended workflow for managing applications:
+
+1. **Pending** (default) - New applications
+2. **Reviewing** - Currently under review
+3. **Approved** - Accepted members
+4. **Rejected** - Not accepted
+
+## 🚀 Quick Access Links
+
+- **Public Site**: `/`
+- **Application Form**: `/#signup`
+- **Admin Login**: `/auth`
+- **Admin Dashboard**: `/admin`
+
+## 💡 Tips
+
+- Keep the super admin password secure
+- Regularly review and update application statuses
+- Download CVs before making final decisions
+- Use role titles to clarify responsibilities
+- Only grant super_admin role to trusted individuals
+
+## 🆘 Troubleshooting
+
+**Can't login as super admin?**
+- Make sure you're using the correct email: `dev@dotmini.in.th`
+- Password is case-sensitive: `arsenal56`
+- Try clearing browser cache and cookies
+
+**Not seeing admin dashboard after login?**
+- Check that the super_admin role was assigned
+- Go to backend → Database → user_roles table to verify
+
+**Other admins can't login?**
+- Verify they were added through the User Management interface
+- Check they have a valid role assigned
+- Ensure they're using the correct credentials
