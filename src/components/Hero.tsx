@@ -1,17 +1,25 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import heroBg from "@/assets/hero-bg.jpg";
+import heroBg from "@/assets/hero-animated.jpg";
 
 export const Hero = () => {
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image with Overlay */}
+      {/* Animated Background with Parallax Effect */}
       <div className="absolute inset-0 z-0">
-        <img
+        <motion.img
           src={heroBg}
-          alt="AI Neural Network"
+          alt="AI Neural Network Animation"
           className="w-full h-full object-cover"
+          animate={{
+            scale: [1, 1.1, 1],
+          }}
+          transition={{
+            duration: 20,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
         />
         <div className="absolute inset-0 bg-gradient-to-br from-midnight-blue/90 via-midnight-blue/70 to-spu-pink/30" />
       </div>

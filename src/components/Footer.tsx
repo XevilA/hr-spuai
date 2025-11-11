@@ -7,7 +7,7 @@ export const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
           {/* Brand */}
           <div>
-            <h3 className="text-2xl font-bold mb-4 text-gradient">SPU AI CLUB</h3>
+            <h3 className="text-2xl font-bold mb-4 text-gradient">HR@SPU AI CLUB</h3>
             <p className="text-white/70 mb-4">
               Empowering the next generation of AI innovators at Sripatum University.
             </p>
@@ -86,7 +86,7 @@ export const Footer = () => {
 
         {/* Bottom Bar */}
         <div className="border-t border-white/10 pt-8 text-center text-white/50">
-          <p>&copy; {new Date().getFullYear()} SPU AI CLUB. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} HR@SPU AI CLUB. All rights reserved.</p>
         </div>
       </div>
     </footer>

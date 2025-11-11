@@ -5,22 +5,22 @@ import { useEffect, useState } from "react";
 
 const testimonials = [
   {
-    name: "Siriporn K.",
-    role: "Computer Science '24",
-    content: "SPU AI Club transformed my understanding of machine learning. The mentorship and projects gave me real-world experience.",
-    initials: "SK",
+    name: "Tiger",
+    role: "VP of Developer",
+    content: "Leading the developer team has been an incredible journey. SPU AI Club provides the perfect platform to push technical boundaries and mentor talented students.",
+    initials: "TG",
   },
   {
-    name: "Thanawat P.",
-    role: "Engineering '23",
-    content: "The startup funding helped launch my AI company. Best decision was joining this incredible community.",
-    initials: "TP",
+    name: "New",
+    role: "VP of Content Creator",
+    content: "Creating content for SPU AI Club allows me to share our amazing projects with the world. The creative freedom and support here are unmatched.",
+    initials: "NW",
   },
   {
-    name: "Nalinee M.",
-    role: "Data Science '25",
-    content: "Amazing workshops and networking opportunities. I landed my dream job thanks to connections made here.",
-    initials: "NM",
+    name: "M",
+    role: "VP of General Affairs (GA)",
+    content: "Managing operations and ensuring smooth events has taught me invaluable leadership skills. This club is where innovation meets execution.",
+    initials: "M",
   },
   {
     name: "Krit S.",
