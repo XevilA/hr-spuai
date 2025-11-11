@@ -1,148 +1,240 @@
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
+import { useRef } from "react";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ChatbotButton } from "@/components/ChatbotButton";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Mail, MapPin, Phone, Facebook, Instagram, Linkedin } from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
 
 const Contact = () => {
-  const contactInfo = [
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"],
+  });
+
+  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
+  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+
+  const contacts = [
     {
       icon: Mail,
       title: "Email",
-      details: "contact@spuaiclub.com",
-      link: "mailto:contact@spuaiclub.com",
+      items: [
+        { label: "General", value: "spu.ai.club@spu.ac.th", href: "mailto:spu.ai.club@spu.ac.th" },
+        { label: "President", value: "dev@dotmini.in.th", href: "mailto:dev@dotmini.in.th" },
+      ],
     },
     {
       icon: Phone,
       title: "Phone",
-      details: "+66 2 579 1111",
-      link: "tel:+6625791111",
+      items: [
+        { label: "President", value: "064-223-0671", href: "tel:0642230671" },
+      ],
     },
     {
       icon: MapPin,
       title: "Location",
-      details: "Sripatum University, Bangkok, Thailand",
-      link: "https://maps.google.com",
+      items: [
+        { label: "Address", value: "Sripatum University, Bangkok, Thailand", href: "#" },
+      ],
     },
   ];
 
   const socialMedia = [
-    { icon: Facebook, name: "Facebook", link: "https://facebook.com" },
-    { icon: Instagram, name: "Instagram", link: "https://instagram.com" },
-    { icon: Linkedin, name: "LinkedIn", link: "https://linkedin.com" },
+    {
+      icon: Facebook,
+      name: "Facebook",
+      handle: "@AIPreneurspu",
+      url: "https://www.facebook.com/AIPreneurspu",
+      color: "from-blue-500 to-blue-600",
+    },
+    {
+      icon: Instagram,
+      name: "Instagram",
+      handle: "@spu.ai.club",
+      url: "https://www.instagram.com/spu.ai.club/",
+      color: "from-pink-500 via-red-500 to-yellow-500",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" ref={containerRef}>
       <Navbar />
-      
-      <main className="pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+
+      {/* Hero Section with Parallax */}
+      <motion.section 
+        style={{ y, opacity }}
+        className="relative pt-32 pb-20 overflow-hidden"
+      >
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5" />
+        
+        <div className="container mx-auto px-4 relative z-10">
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-16"
+            transition={{ duration: 0.8 }}
+            className="text-center max-w-4xl mx-auto"
           >
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4 text-gradient">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.2 }}
+              className="inline-block mb-6 px-6 py-2 bg-primary/10 rounded-full border border-primary/20"
+            >
+              <span className="text-primary font-semibold text-sm tracking-wider uppercase">
+                Get In Touch
+              </span>
+            </motion.div>
+
+            <h1 className="text-5xl sm:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
               Contact Us
             </h1>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              ติดต่อเราได้ทุกช่องทาง เรายินดีที่จะตอบคำถามและรับฟังข้อเสนอแนะจากคุณ
+            <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed">
+              มีคำถามหรือต้องการความช่วยเหลือ? เราพร้อมให้บริการคุณ
             </p>
           </motion.div>
+        </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-12">
-            {/* Contact Info Cards */}
-            {contactInfo.map((item, index) => (
+        {/* Animated Background Elements */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            opacity: [0.3, 0.5, 0.3],
+          }}
+          transition={{
+            duration: 8,
+            repeat: Infinity,
+          }}
+          className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl"
+        />
+        <motion.div
+          animate={{
+            scale: [1.2, 1, 1.2],
+            opacity: [0.5, 0.3, 0.5],
+          }}
+          transition={{
+            duration: 10,
+            repeat: Infinity,
+          }}
+          className="absolute bottom-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl"
+        />
+      </motion.section>
+
+      {/* Contact Information Cards */}
+      <section className="py-20 relative">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
+            {contacts.map((contact, index) => (
               <motion.div
-                key={item.title}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
+                key={contact.title}
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                <a href={item.link} target="_blank" rel="noopener noreferrer">
-                  <Card className="h-full hover-lift text-center">
-                    <CardHeader>
-                      <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                        <item.icon className="w-6 h-6 text-primary" />
+                <Card className="p-8 h-full hover-lift group">
+                  <motion.div
+                    whileHover={{ scale: 1.1, rotate: 5 }}
+                    className="w-16 h-16 mb-6 rounded-2xl bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center"
+                  >
+                    <contact.icon className="w-8 h-8 text-white" />
+                  </motion.div>
+                  <h3 className="text-2xl font-bold mb-6">{contact.title}</h3>
+                  <div className="space-y-4">
+                    {contact.items.map((item) => (
+                      <div key={item.label}>
+                        <p className="text-sm text-muted-foreground mb-1">{item.label}</p>
+                        {item.href.startsWith("#") ? (
+                          <p className="text-foreground font-medium">{item.value}</p>
+                        ) : (
+                          <a
+                            href={item.href}
+                            className="text-foreground font-medium hover:text-primary transition-colors story-link"
+                          >
+                            {item.value}
+                          </a>
+                        )}
                       </div>
-                      <CardTitle>{item.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      <p className="text-muted-foreground">{item.details}</p>
-                    </CardContent>
-                  </Card>
-                </a>
+                    ))}
+                  </div>
+                </Card>
               </motion.div>
             ))}
           </div>
 
-          {/* Social Media */}
+          {/* Social Media Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center mb-12"
           >
-            <Card className="max-w-2xl mx-auto">
-              <CardHeader className="text-center">
-                <CardTitle>Follow Us</CardTitle>
-                <CardDescription>
-                  ติดตามข่าวสารและกิจกรรมของเราได้ที่ Social Media
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex justify-center gap-6">
-                  {socialMedia.map((social) => (
-                    <a
-                      key={social.name}
-                      href={social.link}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="w-12 h-12 rounded-full bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors"
-                      aria-label={social.name}
-                    >
-                      <social.icon className="w-6 h-6 text-primary" />
-                    </a>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            <h2 className="text-4xl font-bold mb-4">Follow Us</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              ติดตามข่าวสารและกิจกรรมของเราผ่านโซเชียลมีเดีย
+            </p>
           </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto mb-20">
+            {socialMedia.map((social, index) => (
+              <motion.a
+                key={social.name}
+                href={social.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                initial={{ opacity: 0, x: index % 2 === 0 ? -30 : 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
+                className="group"
+              >
+                <Card className="p-8 h-full overflow-hidden relative">
+                  <div className={`absolute inset-0 bg-gradient-to-br ${social.color} opacity-0 group-hover:opacity-10 transition-opacity duration-500`} />
+                  <div className="relative flex items-center gap-6">
+                    <motion.div
+                      whileHover={{ rotate: 360 }}
+                      transition={{ duration: 0.6 }}
+                      className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${social.color} flex items-center justify-center flex-shrink-0`}
+                    >
+                      <social.icon className="w-10 h-10 text-white" />
+                    </motion.div>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold mb-2">{social.name}</h3>
+                      <p className="text-muted-foreground">{social.handle}</p>
+                    </div>
+                  </div>
+                </Card>
+              </motion.a>
+            ))}
+          </div>
 
           {/* Map Section */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.4 }}
-            className="mt-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
           >
-            <Card>
-              <CardHeader>
-                <CardTitle>Our Location</CardTitle>
-                <CardDescription>
-                  มหาวิทยาลัยศรีปทุม วังท่าพระ กรุงเทพฯ
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="aspect-video rounded-lg overflow-hidden bg-muted">
-                  <iframe
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.0244732891847!2d100.49137931483033!3d13.778584490330673!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e298c3e52e3e51%3A0x40100b25de24d90!2sSripatum%20University!5e0!3m2!1sen!2sth!4v1234567890123"
-                    width="100%"
-                    height="100%"
-                    style={{ border: 0 }}
-                    allowFullScreen
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
-              </CardContent>
+            <Card className="overflow-hidden">
+              <div className="aspect-video w-full">
+                <iframe
+                  src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3875.0238329687243!2d100.61139731483079!3d13.780953190328998!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x30e29ed269e33f83%3A0x8ca28866b85d9945!2sSripatum%20University!5e0!3m2!1sen!2sth!4v1645234567890!5m2!1sen!2sth"
+                  width="100%"
+                  height="100%"
+                  style={{ border: 0 }}
+                  allowFullScreen
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                  title="Sripatum University Location"
+                />
+              </div>
             </Card>
           </motion.div>
         </div>
-      </main>
+      </section>
 
       <Footer />
       <ChatbotButton />
