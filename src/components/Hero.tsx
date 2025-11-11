@@ -1,9 +1,12 @@
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Briefcase } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import heroBg from "@/assets/hero-animated.jpg";
 
 export const Hero = () => {
+  const navigate = useNavigate();
+  
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Animated Background with Parallax Effect */}
@@ -55,6 +58,7 @@ export const Hero = () => {
           </motion.p>
 
           <motion.div
+            className="flex flex-col sm:flex-row gap-4 justify-center"
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.6, duration: 0.6 }}
@@ -68,6 +72,15 @@ export const Hero = () => {
             >
               Apply Now
               <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" />
+            </Button>
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105 group"
+              onClick={() => navigate("/positions")}
+            >
+              View Open Positions
+              <Briefcase className="ml-2 group-hover:translate-x-1 transition-transform" />
             </Button>
           </motion.div>
         </motion.div>
