@@ -47,6 +47,32 @@ export const Showcase = () => {
     );
   }
 
+  if (projects.length === 0) {
+    return (
+      <section className="py-20 bg-background">
+        <div className="container mx-auto px-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="text-center"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-foreground">
+              Featured <span className="text-gradient">Projects</span>
+            </h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
+              Explore groundbreaking AI projects built by our talented members
+            </p>
+            <p className="text-muted-foreground">
+              No projects available yet. Admin can add projects from the admin dashboard.
+            </p>
+          </motion.div>
+        </div>
+      </section>
+    );
+  }
+
   return (
     <section className="py-20 bg-background">
       <div className="container mx-auto px-4">
