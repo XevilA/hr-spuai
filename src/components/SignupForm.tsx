@@ -193,7 +193,7 @@ export const SignupForm = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 glass-card p-8 rounded-3xl"
+              className="space-y-6 bg-white p-8 rounded-3xl shadow-lg"
             >
               <h3 className="text-2xl font-bold mb-6 text-foreground">
                 ข้อมูลส่วนตัว
@@ -290,7 +290,7 @@ export const SignupForm = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 glass-card p-8 rounded-3xl"
+              className="space-y-6 bg-white p-8 rounded-3xl shadow-lg"
             >
               <h3 className="text-2xl font-bold mb-6 text-foreground">
                 ข้อมูลติดต่อ
@@ -375,7 +375,7 @@ export const SignupForm = () => {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="space-y-6 glass-card p-8 rounded-3xl"
+              className="space-y-6 bg-white p-8 rounded-3xl shadow-lg"
             >
               <h3 className="text-2xl font-bold mb-6 text-foreground">
                 แรงบันดาลใจและเอกสาร
