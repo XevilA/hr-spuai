@@ -23,6 +23,14 @@ export default {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
         },
+        "spu-pink": {
+          DEFAULT: "hsl(var(--spu-pink))",
+          light: "hsl(var(--spu-pink-light))",
+        },
+        "midnight-blue": {
+          DEFAULT: "hsl(var(--midnight-blue))",
+          light: "hsl(var(--midnight-blue-light))",
+        },
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
