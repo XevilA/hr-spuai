@@ -75,23 +75,23 @@ export const UserRolesManager = () => {
     setLoading(true);
 
     try {
-      // Create new user
-      const { data: authData, error: signUpError } = await supabase.auth.signUp({
-        email: newUserEmail,
-        password: newUserPassword,
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        throw new Error("Not authenticated");
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-admin-user", {
+        body: {
+          email: newUserEmail,
+          password: newUserPassword,
+          role: newUserRole,
+          role_title: newUserRoleTitle,
+        },
       });
 
-      if (signUpError) throw signUpError;
-      if (!authData.user) throw new Error("User creation failed");
-
-      // Add role
-      const { error: roleError } = await supabase.from("user_roles").insert([{
-        user_id: authData.user.id,
-        role: newUserRole as "super_admin" | "vice_president" | "admin",
-        role_title: newUserRoleTitle || null,
-      }]);
-
-      if (roleError) throw roleError;
+      if (error) throw error;
+      if (!data?.success) throw new Error("Failed to create admin user");
 
       toast({
         title: "Success",

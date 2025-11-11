@@ -50,7 +50,7 @@ const Positions = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <div className="bg-gradient-to-b from-midnight-blue to-background py-20">
+      <div className="bg-midnight-blue py-20">
         <div className="container mx-auto px-4">
           <Button
             variant="ghost"
@@ -68,7 +68,7 @@ const Positions = () => {
           >
             <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
               Open{" "}
-              <span className="text-gradient bg-gradient-to-r from-spu-pink to-spu-pink-light bg-clip-text text-transparent">
+              <span className="text-spu-pink">
                 Positions
               </span>
             </h1>
@@ -102,7 +102,7 @@ const Positions = () => {
               >
                 <Card className="hover:shadow-xl transition-shadow duration-300 border-2 hover:border-spu-pink/50">
                   <CardHeader>
-                    <CardTitle className="text-3xl mb-2 text-gradient bg-gradient-to-r from-spu-pink to-spu-pink-light bg-clip-text text-transparent">
+                    <CardTitle className="text-3xl mb-2 text-spu-pink">
                       {position.title}
                     </CardTitle>
                     <CardDescription className="text-base">

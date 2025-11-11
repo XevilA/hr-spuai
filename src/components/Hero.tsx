@@ -24,7 +24,7 @@ export const Hero = () => {
             ease: "easeInOut",
           }}
         />
-        <div className="absolute inset-0 bg-gradient-to-br from-midnight-blue/90 via-midnight-blue/70 to-spu-pink/30" />
+        <div className="absolute inset-0 bg-midnight-blue/80" />
       </div>
 
       {/* Content */}
@@ -41,7 +41,7 @@ export const Hero = () => {
             transition={{ delay: 0.2, duration: 0.8 }}
           >
             Unlock Your{" "}
-            <span className="text-gradient bg-gradient-to-r from-spu-pink to-spu-pink-light bg-clip-text text-transparent">
+            <span className="text-spu-pink">
               AI Potential
             </span>
             <br />
@@ -75,8 +75,7 @@ export const Hero = () => {
             </Button>
             <Button
               size="lg"
-              variant="outline"
-              className="border-2 border-white/30 text-white hover:bg-white/10 px-8 py-6 text-lg font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105 group"
+              className="bg-white text-spu-pink hover:bg-white/90 px-8 py-6 text-lg font-semibold rounded-full shadow-2xl transition-all duration-300 hover:scale-105 group"
               onClick={() => navigate("/positions")}
             >
               View Open Positions
