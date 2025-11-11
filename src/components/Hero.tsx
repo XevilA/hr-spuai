@@ -2,27 +2,22 @@ import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Briefcase } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import heroBg from "@/assets/hero-animated.jpg";
 
 export const Hero = () => {
   const navigate = useNavigate();
   
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Animated Background with Parallax Effect */}
+      {/* Video Background */}
       <div className="absolute inset-0 z-0">
-        <motion.img
-          src={heroBg}
-          alt="AI Neural Network Animation"
+        <video
+          src="https://nyzdegtzgyrhwgcvlvuq.supabase.co/storage/v1/object/public/media/uploads/1762890395962_nx4nea3oa.mp4"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="auto"
           className="w-full h-full object-cover"
-          animate={{
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 20,
-            repeat: Infinity,
-            ease: "easeInOut",
-          }}
         />
         <div className="absolute inset-0 bg-midnight-blue/80" />
       </div>
