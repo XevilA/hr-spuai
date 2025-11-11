@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -15,6 +15,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Upload, Check, Loader2 } from "lucide-react";
 
+interface Position {
+  id: string;
+  title: string;
+  description: string;
+}
+
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 const ACCEPTED_FILE_TYPES = [
   "application/pdf",
@@ -25,6 +31,7 @@ const ACCEPTED_FILE_TYPES = [
 ];
 
 const applicationSchema = z.object({
+  position: z.string().min(1, "กรุณาเลือกตำแหน่งที่สมัคร"),
   fullName: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
   nickname: z.string().min(1, "กรุณากรอกชื่อเล่น"),
   universityYear: z.string().min(1, "กรุณาเลือกชั้นปี"),
@@ -44,7 +51,31 @@ export const SignupForm = () => {
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [loadingPositions, setLoadingPositions] = useState(true);
   const totalSteps = 3;
+
+  useEffect(() => {
+    fetchPositions();
+  }, []);
+
+  const fetchPositions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("positions")
+        .select("id, title, description")
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setPositions(data || []);
+    } catch (error) {
+      console.error("Error fetching positions:", error);
+      toast.error("ไม่สามารถโหลดตำแหน่งที่เปิดรับสมัครได้");
+    } finally {
+      setLoadingPositions(false);
+    }
+  };
 
   const {
     register,
@@ -94,7 +125,7 @@ export const SignupForm = () => {
     let fieldsToValidate: (keyof ApplicationForm)[] = [];
 
     if (step === 1) {
-      fieldsToValidate = ["fullName", "nickname", "universityYear", "faculty", "major"];
+      fieldsToValidate = ["position", "fullName", "nickname", "universityYear", "faculty", "major"];
     } else if (step === 2) {
       fieldsToValidate = ["email", "phone"];
     }
@@ -129,6 +160,7 @@ export const SignupForm = () => {
 
       // Insert application
       const { data: insertData, error: insertError } = await supabase.from("applications").insert({
+        position_id: data.position,
         full_name: data.fullName,
         nickname: data.nickname,
         university_year: parseInt(data.universityYear),
@@ -223,6 +255,42 @@ export const SignupForm = () => {
               <h3 className="text-2xl font-bold mb-6 text-foreground">
                 ข้อมูลส่วนตัว
               </h3>
+
+              <div>
+                <Label htmlFor="position">ตำแหน่งที่สมัคร *</Label>
+                {loadingPositions ? (
+                  <div className="mt-1 p-3 border rounded-lg text-muted-foreground">
+                    กำลังโหลดตำแหน่ง...
+                  </div>
+                ) : positions.length === 0 ? (
+                  <div className="mt-1 p-3 border border-yellow-500 rounded-lg text-yellow-700 bg-yellow-50">
+                    ขณะนี้ยังไม่มีตำแหน่งเปิดรับสมัคร กรุณาลองใหม่ภายหลัง
+                  </div>
+                ) : (
+                  <Select
+                    onValueChange={(value) => setValue("position", value)}
+                  >
+                    <SelectTrigger className="mt-1">
+                      <SelectValue placeholder="เลือกตำแหน่งที่สนใจ" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map((position) => (
+                        <SelectItem key={position.id} value={position.id}>
+                          <div className="flex flex-col">
+                            <span className="font-medium">{position.title}</span>
+                            <span className="text-xs text-muted-foreground line-clamp-1">
+                              {position.description}
+                            </span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.position && (
+                  <p className="text-destructive text-sm mt-1">{errors.position.message}</p>
+                )}
+              </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>

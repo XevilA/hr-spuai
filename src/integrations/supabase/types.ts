@@ -31,6 +31,7 @@ export type Database = {
           nickname: string
           phone: string
           portfolio_url: string | null
+          position_id: string | null
           status: string | null
           university_year: number
           updated_at: string | null
@@ -51,6 +52,7 @@ export type Database = {
           nickname: string
           phone: string
           portfolio_url?: string | null
+          position_id?: string | null
           status?: string | null
           university_year: number
           updated_at?: string | null
@@ -71,11 +73,20 @@ export type Database = {
           nickname?: string
           phone?: string
           portfolio_url?: string | null
+          position_id?: string | null
           status?: string | null
           university_year?: number
           updated_at?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "applications_position_id_fkey"
+            columns: ["position_id"]
+            isOneToOne: false
+            referencedRelation: "positions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       positions: {
         Row: {

@@ -19,26 +19,32 @@ serve(async (req) => {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    // Fetch application details
+    // Fetch application details with position
     const { data: application, error: appError } = await supabaseClient
       .from("applications")
-      .select("*")
+      .select(`
+        *,
+        positions (
+          title,
+          description,
+          requirements,
+          responsibilities
+        )
+      `)
       .eq("id", applicationId)
       .single();
 
     if (appError) throw appError;
 
-    // Fetch all active positions
-    const { data: positions } = await supabaseClient
-      .from("positions")
-      .select("*")
-      .eq("is_active", true);
+    const position = application.positions;
+    const positionContext = position 
+      ? `ตำแหน่งที่สมัคร: ${position.title}
+คำอธิบาย: ${position.description}
+คุณสมบัติที่ต้องการ: ${position.requirements}
+หน้าที่รับผิดชอบ: ${position.responsibilities}`
+      : "ไม่ได้ระบุตำแหน่ง";
 
-    const positionsContext = positions?.map(p => 
-      `ตำแหน่ง: ${p.title}\nคุณสมบัติ: ${p.requirements}`
-    ).join("\n\n") || "";
-
-    const evaluationPrompt = `วิเคราะห์ความเหมาะสมของผู้สมัครต่อไปนี้กับตำแหน่งที่เปิดรับในชมรม:
+    const evaluationPrompt = `วิเคราะห์ความเหมาะสมของผู้สมัครต่อไปนี้กับตำแหน่งที่สมัคร:
 
 ข้อมูลผู้สมัคร:
 - ชื่อ: ${application.full_name}
@@ -48,12 +54,11 @@ serve(async (req) => {
 - แรงบันดาลใจ: ${application.motivation}
 ${application.portfolio_url ? `- Portfolio: ${application.portfolio_url}` : ''}
 
-ตำแหน่งที่เปิดรับ:
-${positionsContext}
+${positionContext}
 
 โปรดวิเคราะห์และให้:
-1. เปอร์เซ็นต์ความเหมาะสม (0-100)
-2. ข้อเสนอแนะสั้นๆ เกี่ยวกับความเหมาะสมและข้อควรพัฒนา
+1. เปอร์เซ็นต์ความเหมาะสม (0-100) เทียบกับตำแหน่งที่สมัคร
+2. ข้อเสนอแนะสั้นๆ เกี่ยวกับความเหมาะสมและข้อควรพัฒนาสำหรับตำแหน่งนี้โดยเฉพาะ
 
 ตอบกลับในรูปแบบ JSON:
 {

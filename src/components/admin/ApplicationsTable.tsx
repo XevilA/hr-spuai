@@ -34,6 +34,10 @@ type Application = {
   created_at: string;
   match_percentage: number | null;
   ai_evaluation: string | null;
+  position_id: string | null;
+  positions?: {
+    title: string;
+  } | null;
 };
 
 export const ApplicationsTable = () => {
@@ -56,7 +60,12 @@ export const ApplicationsTable = () => {
     try {
       const { data, error } = await supabase
         .from("applications")
-        .select("*")
+        .select(`
+          *,
+          positions (
+            title
+          )
+        `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -177,7 +186,7 @@ export const ApplicationsTable = () => {
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Nickname</TableHead>
+              <TableHead>Position</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Year</TableHead>
               <TableHead>Faculty</TableHead>
@@ -192,7 +201,11 @@ export const ApplicationsTable = () => {
             {filteredApps.map((app) => (
               <TableRow key={app.id}>
                 <TableCell className="font-medium">{app.full_name}</TableCell>
-                <TableCell>{app.nickname}</TableCell>
+                <TableCell>
+                  <span className="text-sm font-medium text-spu-pink">
+                    {app.positions?.title || "N/A"}
+                  </span>
+                </TableCell>
                 <TableCell>{app.email}</TableCell>
                 <TableCell>Year {app.university_year}</TableCell>
                 <TableCell className="text-sm">{app.faculty}</TableCell>
