@@ -131,7 +131,9 @@ const Positions = () => {
                     </div>
 
                     <Button
-                      onClick={() => navigate("/#signup")}
+                      onClick={() => {
+                        window.location.href = "/#signup";
+                      }}
                       className="w-full bg-spu-pink hover:bg-spu-pink-light text-white"
                       size="lg"
                     >

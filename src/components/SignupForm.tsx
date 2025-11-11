@@ -53,6 +53,7 @@ export const SignupForm = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [positions, setPositions] = useState<Position[]>([]);
   const [loadingPositions, setLoadingPositions] = useState(true);
+  const [suggestingPosition, setSuggestingPosition] = useState(false);
   const totalSteps = 3;
 
   useEffect(() => {
@@ -74,6 +75,43 @@ export const SignupForm = () => {
       toast.error("ไม่สามารถโหลดตำแหน่งที่เปิดรับสมัครได้");
     } finally {
       setLoadingPositions(false);
+    }
+  };
+
+  const handleAISuggest = async () => {
+    const formData = watch();
+    
+    // Validate required fields for AI suggestion
+    if (!formData.fullName || !formData.faculty || !formData.major || !formData.universityYear) {
+      toast.error("กรุณากรอกข้อมูลส่วนตัวให้ครบก่อนใช้ AI แนะนำ");
+      return;
+    }
+
+    setSuggestingPosition(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("suggest-position", {
+        body: {
+          fullName: formData.fullName,
+          faculty: formData.faculty,
+          major: formData.major,
+          universityYear: formData.universityYear,
+          motivation: formData.motivation || "",
+        },
+      });
+
+      if (error) throw error;
+
+      if (data?.suggestion) {
+        setValue("position", data.suggestion.id);
+        toast.success(`AI แนะนำตำแหน่ง: ${data.suggestion.title} ✨`);
+      } else {
+        toast.info("AI ไม่สามารถแนะนำตำแหน่งได้ กรุณาเลือกเอง");
+      }
+    } catch (error) {
+      console.error("Error suggesting position:", error);
+      toast.error("ไม่สามารถใช้ AI แนะนำได้ กรุณาลองอีกครั้ง");
+    } finally {
+      setSuggestingPosition(false);
     }
   };
 
@@ -257,7 +295,26 @@ export const SignupForm = () => {
               </h3>
 
               <div>
-                <Label htmlFor="position">ตำแหน่งที่สมัคร *</Label>
+                <div className="flex items-center justify-between mb-1">
+                  <Label htmlFor="position">ตำแหน่งที่สมัคร *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAISuggest}
+                    disabled={suggestingPosition || loadingPositions}
+                    className="text-xs"
+                  >
+                    {suggestingPosition ? (
+                      <>
+                        <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                        กำลังวิเคราะห์...
+                      </>
+                    ) : (
+                      <>✨ AI แนะนำ</>
+                    )}
+                  </Button>
+                </div>
                 {loadingPositions ? (
                   <div className="mt-1 p-3 border rounded-lg text-muted-foreground">
                     กำลังโหลดตำแหน่ง...
@@ -269,9 +326,10 @@ export const SignupForm = () => {
                 ) : (
                   <Select
                     onValueChange={(value) => setValue("position", value)}
+                    value={watch("position")}
                   >
                     <SelectTrigger className="mt-1">
-                      <SelectValue placeholder="เลือกตำแหน่งที่สนใจ" />
+                      <SelectValue placeholder="เลือกตำแหน่งที่สนใจ หรือกด AI แนะนำ" />
                     </SelectTrigger>
                     <SelectContent>
                       {positions.map((position) => (
