@@ -18,7 +18,17 @@ import {
 } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Download, Search } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Download, Search, Mail } from "lucide-react";
 
 type Application = {
   id: string;
@@ -46,6 +56,11 @@ export const ApplicationsTable = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
+  const [messageSubject, setMessageSubject] = useState("");
+  const [messageContent, setMessageContent] = useState("");
+  const [sendingMessage, setSendingMessage] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -151,6 +166,49 @@ export const ApplicationsTable = () => {
     }
   };
 
+  const openMessageDialog = (applicant: Application) => {
+    setSelectedApplicant(applicant);
+    setMessageSubject(`Regarding Your Application to SPU AI CLUB`);
+    setMessageContent("");
+    setMessageDialogOpen(true);
+  };
+
+  const sendMessage = async () => {
+    if (!selectedApplicant) return;
+
+    setSendingMessage(true);
+    try {
+      const { error } = await supabase.functions.invoke("send-message-to-applicant", {
+        body: {
+          to: selectedApplicant.email,
+          subject: messageSubject,
+          message: messageContent,
+          applicantName: selectedApplicant.full_name,
+        },
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Message sent successfully",
+      });
+
+      setMessageDialogOpen(false);
+      setMessageSubject("");
+      setMessageContent("");
+      setSelectedApplicant(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to send message",
+        variant: "destructive",
+      });
+    } finally {
+      setSendingMessage(false);
+    }
+  };
+
   if (loading) {
     return <div className="text-center py-8">Loading applications...</div>;
   }
@@ -194,6 +252,7 @@ export const ApplicationsTable = () => {
               <TableHead>AI Evaluation</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>CV</TableHead>
+              <TableHead>Actions</TableHead>
               <TableHead>Date</TableHead>
             </TableRow>
           </TableHeader>
@@ -250,6 +309,17 @@ export const ApplicationsTable = () => {
                     </Button>
                   )}
                 </TableCell>
+                <TableCell>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => openMessageDialog(app)}
+                    className="gap-2"
+                  >
+                    <Mail className="h-4 w-4" />
+                    Send Message
+                  </Button>
+                </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(app.created_at).toLocaleDateString()}
                 </TableCell>
@@ -264,6 +334,52 @@ export const ApplicationsTable = () => {
           No applications found
         </div>
       )}
+
+      {/* Message Dialog */}
+      <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Send Message to {selectedApplicant?.full_name}</DialogTitle>
+            <DialogDescription>
+              Send a personalized message to the applicant at {selectedApplicant?.email}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Subject</label>
+              <Input
+                value={messageSubject}
+                onChange={(e) => setMessageSubject(e.target.value)}
+                placeholder="Email subject..."
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Message</label>
+              <Textarea
+                value={messageContent}
+                onChange={(e) => setMessageContent(e.target.value)}
+                placeholder="Type your message here..."
+                className="min-h-[200px] resize-none"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setMessageDialogOpen(false)}
+              disabled={sendingMessage}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={sendMessage}
+              disabled={!messageSubject || !messageContent || sendingMessage}
+            >
+              {sendingMessage ? "Sending..." : "Send Message"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

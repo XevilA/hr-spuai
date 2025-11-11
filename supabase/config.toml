@@ -12,5 +12,8 @@ verify_jwt = false
 [functions.suggest-position]
 verify_jwt = false
 
+[functions.send-message-to-applicant]
+verify_jwt = true
+
 [functions.setup-initial-admin]
 verify_jwt = false

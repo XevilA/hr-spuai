@@ -8,6 +8,7 @@ import { ApplicationsTable } from "@/components/admin/ApplicationsTable";
 import { UserRolesManager } from "@/components/admin/UserRolesManager";
 import { ProjectsManager } from "@/components/admin/ProjectsManager";
 import { PositionsManager } from "@/components/admin/PositionsManager";
+import { Dashboard } from "@/components/admin/Dashboard";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -95,8 +96,9 @@ const Admin = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
         >
-          <Tabs defaultValue="applications" className="space-y-6">
+          <Tabs defaultValue="dashboard" className="space-y-6">
             <TabsList>
+              <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="applications">Applications</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="positions">Positions</TabsTrigger>
@@ -104,6 +106,10 @@ const Admin = () => {
                 <TabsTrigger value="users">User Management</TabsTrigger>
               )}
             </TabsList>
+
+            <TabsContent value="dashboard">
+              <Dashboard />
+            </TabsContent>
 
             <TabsContent value="applications">
               <ApplicationsTable />

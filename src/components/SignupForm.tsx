@@ -166,7 +166,7 @@ export const SignupForm = () => {
     let fieldsToValidate: (keyof ApplicationForm)[] = [];
 
     if (step === 1) {
-      fieldsToValidate = ["position", "fullName", "nickname", "universityYear", "faculty", "major"];
+      fieldsToValidate = ["interestsSkills", "position", "fullName", "nickname", "universityYear", "faculty", "major"];
     } else if (step === 2) {
       fieldsToValidate = ["email", "phone"];
     }
@@ -354,6 +354,34 @@ export const SignupForm = () => {
                 )}
               </div>
 
+              <div>
+                <Label htmlFor="interestsSkills">
+                  ความสนใจ/ความสามารถเบื้องต้น *
+                </Label>
+                <Textarea
+                  id="interestsSkills"
+                  {...register("interestsSkills")}
+                  className="mt-1 min-h-[120px]"
+                  placeholder="เช่น: สนใจ Machine Learning, เคยเขียน Python, ชอบทำ Data Visualization, มีประสบการณ์ทำโปรเจกต์ AI..."
+                />
+                <div className="flex justify-between mt-1">
+                  {errors.interestsSkills && (
+                    <p className="text-destructive text-sm">{errors.interestsSkills.message}</p>
+                  )}
+                  <p
+                    className={`text-sm ml-auto ${
+                      interestsSkills.length > 300
+                        ? "text-destructive"
+                        : interestsSkills.length > 250
+                        ? "text-yellow-500"
+                        : "text-muted-foreground"
+                    }`}
+                  >
+                    {interestsSkills.length}/300 ตัวอักษร
+                  </p>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <Label htmlFor="fullName">ชื่อ-นามสกุล *</Label>
@@ -535,34 +563,6 @@ export const SignupForm = () => {
               <h3 className="text-2xl font-bold mb-6 text-foreground">
                 แรงบันดาลใจและเอกสาร
               </h3>
-
-              <div>
-                <Label htmlFor="interestsSkills">
-                  ความสนใจ/ความสามารถเบื้องต้น *
-                </Label>
-                <Textarea
-                  id="interestsSkills"
-                  {...register("interestsSkills")}
-                  className="mt-1 min-h-[120px]"
-                  placeholder="เช่น: สนใจ Machine Learning, เคยเขียน Python, ชอบทำ Data Visualization, มีประสบการณ์ทำโปรเจกต์ AI..."
-                />
-                <div className="flex justify-between mt-1">
-                  {errors.interestsSkills && (
-                    <p className="text-destructive text-sm">{errors.interestsSkills.message}</p>
-                  )}
-                  <p
-                    className={`text-sm ml-auto ${
-                      interestsSkills.length > 300
-                        ? "text-destructive"
-                        : interestsSkills.length > 250
-                        ? "text-yellow-500"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {interestsSkills.length}/300 ตัวอักษร
-                  </p>
-                </div>
-              </div>
 
               <div>
                 <Label htmlFor="motivation">
