@@ -4,14 +4,12 @@ import { Showcase } from "@/components/Showcase";
 import { Benefits } from "@/components/Benefits";
 import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
-import { StickyApplyButton } from "@/components/StickyApplyButton";
 import { SignupForm } from "@/components/SignupForm";
 import { ChatbotButton } from "@/components/ChatbotButton";
 
 const Index = () => {
   return (
     <div className="min-h-screen">
-      <StickyApplyButton />
       <Hero />
       <Showcase />
       
