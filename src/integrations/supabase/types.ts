@@ -16,6 +16,7 @@ export type Database = {
     Tables: {
       applications: {
         Row: {
+          ai_evaluation: string | null
           created_at: string | null
           cv_file_path: string | null
           email: string
@@ -25,6 +26,7 @@ export type Database = {
           instagram: string | null
           line_id: string | null
           major: string
+          match_percentage: number | null
           motivation: string
           nickname: string
           phone: string
@@ -34,6 +36,7 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          ai_evaluation?: string | null
           created_at?: string | null
           cv_file_path?: string | null
           email: string
@@ -43,6 +46,7 @@ export type Database = {
           instagram?: string | null
           line_id?: string | null
           major: string
+          match_percentage?: number | null
           motivation: string
           nickname: string
           phone: string
@@ -52,6 +56,7 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          ai_evaluation?: string | null
           created_at?: string | null
           cv_file_path?: string | null
           email?: string
@@ -61,12 +66,76 @@ export type Database = {
           instagram?: string | null
           line_id?: string | null
           major?: string
+          match_percentage?: number | null
           motivation?: string
           nickname?: string
           phone?: string
           portfolio_url?: string | null
           status?: string | null
           university_year?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      positions: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          is_active: boolean | null
+          requirements: string
+          responsibilities: string
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          is_active?: boolean | null
+          requirements: string
+          responsibilities: string
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          is_active?: boolean | null
+          requirements?: string
+          responsibilities?: string
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      projects: {
+        Row: {
+          created_at: string | null
+          description: string
+          id: string
+          image_url: string
+          tags: string[]
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          description: string
+          id?: string
+          image_url: string
+          tags?: string[]
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          description?: string
+          id?: string
+          image_url?: string
+          tags?: string[]
+          title?: string
           updated_at?: string | null
         }
         Relationships: []
