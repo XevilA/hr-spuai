@@ -28,7 +28,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Download, Search, Mail } from "lucide-react";
+import { Download, Search, Mail, Eye } from "lucide-react";
 
 type Application = {
   id: string;
@@ -39,6 +39,11 @@ type Application = {
   university_year: number;
   faculty: string;
   major: string;
+  line_id: string | null;
+  instagram: string | null;
+  portfolio_url: string | null;
+  motivation: string;
+  interests_skills: string | null;
   status: string;
   cv_file_path: string | null;
   created_at: string;
@@ -57,9 +62,11 @@ export const ApplicationsTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
+  const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageContent, setMessageContent] = useState("");
+  const [messageEmail, setMessageEmail] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
   const { toast } = useToast();
 
@@ -166,10 +173,16 @@ export const ApplicationsTable = () => {
     }
   };
 
+  const openDetailsDialog = (applicant: Application) => {
+    setSelectedApplicant(applicant);
+    setDetailsDialogOpen(true);
+  };
+
   const openMessageDialog = (applicant: Application) => {
     setSelectedApplicant(applicant);
     setMessageSubject(`Regarding Your Application to SPU AI CLUB`);
     setMessageContent("");
+    setMessageEmail(applicant.email);
     setMessageDialogOpen(true);
   };
 
@@ -180,7 +193,7 @@ export const ApplicationsTable = () => {
     try {
       const { error } = await supabase.functions.invoke("send-message-to-applicant", {
         body: {
-          to: selectedApplicant.email,
+          to: messageEmail,
           subject: messageSubject,
           message: messageContent,
           applicantName: selectedApplicant.full_name,
@@ -197,6 +210,7 @@ export const ApplicationsTable = () => {
       setMessageDialogOpen(false);
       setMessageSubject("");
       setMessageContent("");
+      setMessageEmail("");
       setSelectedApplicant(null);
     } catch (error: any) {
       toast({
@@ -246,12 +260,8 @@ export const ApplicationsTable = () => {
               <TableHead>Name</TableHead>
               <TableHead>Position</TableHead>
               <TableHead>Email</TableHead>
-              <TableHead>Year</TableHead>
-              <TableHead>Faculty</TableHead>
               <TableHead>Match %</TableHead>
-              <TableHead>AI Evaluation</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead>CV</TableHead>
               <TableHead>Actions</TableHead>
               <TableHead>Date</TableHead>
             </TableRow>
@@ -266,8 +276,6 @@ export const ApplicationsTable = () => {
                   </span>
                 </TableCell>
                 <TableCell>{app.email}</TableCell>
-                <TableCell>Year {app.university_year}</TableCell>
-                <TableCell className="text-sm">{app.faculty}</TableCell>
                 <TableCell>
                   <span className={`font-bold ${
                     (app.match_percentage || 0) >= 70 ? 'text-green-600' :
@@ -276,11 +284,6 @@ export const ApplicationsTable = () => {
                   }`}>
                     {app.match_percentage ? `${app.match_percentage}%` : '-'}
                   </span>
-                </TableCell>
-                <TableCell className="max-w-xs">
-                  <p className="text-sm text-muted-foreground line-clamp-2">
-                    {app.ai_evaluation || 'Pending...'}
-                  </p>
                 </TableCell>
                 <TableCell>
                   <Select
@@ -299,26 +302,34 @@ export const ApplicationsTable = () => {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  {app.cv_file_path && (
+                  <div className="flex gap-2">
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => downloadCV(app.cv_file_path!, app.full_name)}
+                      onClick={() => openDetailsDialog(app)}
+                      className="gap-2"
                     >
-                      <Download className="h-4 w-4" />
+                      <Eye className="h-4 w-4" />
+                      View
                     </Button>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => openMessageDialog(app)}
-                    className="gap-2"
-                  >
-                    <Mail className="h-4 w-4" />
-                    Send Message
-                  </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openMessageDialog(app)}
+                      className="gap-2"
+                    >
+                      <Mail className="h-4 w-4" />
+                    </Button>
+                    {app.cv_file_path && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => downloadCV(app.cv_file_path!, app.full_name)}
+                      >
+                        <Download className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
                   {new Date(app.created_at).toLocaleDateString()}
@@ -335,16 +346,161 @@ export const ApplicationsTable = () => {
         </div>
       )}
 
+      {/* Details Dialog */}
+      <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Application Details</DialogTitle>
+            <DialogDescription>
+              Complete application information for {selectedApplicant?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-6 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Full Name</label>
+                <p className="text-sm">{selectedApplicant?.full_name}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Nickname</label>
+                <p className="text-sm">{selectedApplicant?.nickname}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Email</label>
+                <p className="text-sm">{selectedApplicant?.email}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Phone</label>
+                <p className="text-sm">{selectedApplicant?.phone}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Line ID</label>
+                <p className="text-sm">{selectedApplicant?.line_id || "-"}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Instagram</label>
+                <p className="text-sm">{selectedApplicant?.instagram || "-"}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">University Year</label>
+                <p className="text-sm">Year {selectedApplicant?.university_year}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Faculty</label>
+                <p className="text-sm">{selectedApplicant?.faculty}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Major</label>
+                <p className="text-sm">{selectedApplicant?.major}</p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Applied Position</label>
+                <p className="text-sm font-medium text-spu-pink">
+                  {selectedApplicant?.positions?.title || "N/A"}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Match Score</label>
+                <p className={`text-sm font-bold ${
+                  (selectedApplicant?.match_percentage || 0) >= 70 ? 'text-green-600' :
+                  (selectedApplicant?.match_percentage || 0) >= 50 ? 'text-yellow-600' :
+                  'text-red-600'
+                }`}>
+                  {selectedApplicant?.match_percentage ? `${selectedApplicant.match_percentage}%` : '-'}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Application Date</label>
+                <p className="text-sm">
+                  {selectedApplicant?.created_at ? new Date(selectedApplicant.created_at).toLocaleDateString() : "-"}
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-muted-foreground">Interests & Skills</label>
+              <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">
+                {selectedApplicant?.interests_skills || "-"}
+              </p>
+            </div>
+
+            <div className="space-y-2">
+              <label className="text-sm font-semibold text-muted-foreground">Motivation</label>
+              <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">
+                {selectedApplicant?.motivation || "-"}
+              </p>
+            </div>
+
+            {selectedApplicant?.portfolio_url && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">Portfolio</label>
+                <a 
+                  href={selectedApplicant.portfolio_url} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="text-sm text-spu-pink hover:underline"
+                >
+                  {selectedApplicant.portfolio_url}
+                </a>
+              </div>
+            )}
+
+            {selectedApplicant?.ai_evaluation && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">AI Evaluation</label>
+                <p className="text-sm whitespace-pre-wrap bg-muted p-3 rounded-md">
+                  {selectedApplicant.ai_evaluation}
+                </p>
+              </div>
+            )}
+
+            {selectedApplicant?.cv_file_path && (
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-muted-foreground">CV</label>
+                <Button
+                  variant="outline"
+                  onClick={() => downloadCV(selectedApplicant.cv_file_path!, selectedApplicant.full_name)}
+                  className="gap-2"
+                >
+                  <Download className="h-4 w-4" />
+                  Download CV
+                </Button>
+              </div>
+            )}
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setDetailsDialogOpen(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Message Dialog */}
       <Dialog open={messageDialogOpen} onOpenChange={setMessageDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>Send Message to {selectedApplicant?.full_name}</DialogTitle>
             <DialogDescription>
-              Send a personalized message to the applicant at {selectedApplicant?.email}
+              Send a personalized message to the applicant
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Recipient Email</label>
+              <Input
+                value={messageEmail}
+                onChange={(e) => setMessageEmail(e.target.value)}
+                placeholder="recipient@email.com"
+                type="email"
+              />
+              <p className="text-xs text-muted-foreground">
+                Default: {selectedApplicant?.email}
+              </p>
+            </div>
             <div className="space-y-2">
               <label className="text-sm font-medium">Subject</label>
               <Input
@@ -373,7 +529,7 @@ export const ApplicationsTable = () => {
             </Button>
             <Button
               onClick={sendMessage}
-              disabled={!messageSubject || !messageContent || sendingMessage}
+              disabled={!messageSubject || !messageContent || !messageEmail || sendingMessage}
             >
               {sendingMessage ? "Sending..." : "Send Message"}
             </Button>
