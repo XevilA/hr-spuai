@@ -182,6 +182,8 @@ export const SignupForm = () => {
   };
 
   const onSubmit = async (data: ApplicationForm) => {
+    console.log("Form submit triggered", { hasFile: !!uploadedFile, data });
+    
     if (!uploadedFile) {
       toast.error("กรุณาอัพโหลดไฟล์ Resume/CV");
       return;
@@ -631,13 +633,14 @@ export const SignupForm = () => {
         </AnimatePresence>
 
         {/* Navigation Buttons */}
-        <div className="flex gap-4 justify-between">
+        <div className="flex gap-4 justify-between mt-8 mb-4">
           {step > 1 && (
             <Button
               type="button"
               variant="outline"
               onClick={prevStep}
               disabled={isSubmitting}
+              className="touch-manipulation"
             >
               ย้อนกลับ
             </Button>
@@ -646,15 +649,18 @@ export const SignupForm = () => {
             <Button
               type="button"
               onClick={nextStep}
-              className="ml-auto bg-spu-pink hover:bg-spu-pink-light"
+              className="ml-auto bg-spu-pink hover:bg-spu-pink-light touch-manipulation min-h-[44px] px-6"
             >
               ถัดไป
             </Button>
           ) : (
             <Button
               type="submit"
-              disabled={isSubmitting}
-              className="ml-auto bg-spu-pink hover:bg-spu-pink-light"
+              disabled={isSubmitting || !uploadedFile}
+              className="ml-auto bg-spu-pink hover:bg-spu-pink-light touch-manipulation min-h-[44px] px-6 relative z-10"
+              onClick={(e) => {
+                console.log("Submit button clicked", { isSubmitting, uploadedFile: !!uploadedFile });
+              }}
             >
               {isSubmitting ? (
                 <>
