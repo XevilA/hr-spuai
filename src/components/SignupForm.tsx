@@ -225,6 +225,7 @@ export const SignupForm = () => {
           body: {
             to: data.email,
             fullName: data.fullName,
+            status: "pending"
           },
         });
       } catch (emailError) {

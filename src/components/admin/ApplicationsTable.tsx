@@ -124,6 +124,15 @@ export const ApplicationsTable = () => {
 
   const updateStatus = async (id: string, status: string) => {
     try {
+      // Get application details before updating
+      const { data: application, error: fetchError } = await supabase
+        .from("applications")
+        .select("email, full_name")
+        .eq("id", id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
       const { error } = await supabase
         .from("applications")
         .update({ status })
@@ -134,6 +143,22 @@ export const ApplicationsTable = () => {
       setApplications((prev) =>
         prev.map((app) => (app.id === id ? { ...app, status } : app))
       );
+
+      // Send status update email for review, approved, and rejected
+      if (["review", "approved", "rejected"].includes(status)) {
+        try {
+          await supabase.functions.invoke("send-application-email", {
+            body: {
+              to: application.email,
+              fullName: application.full_name,
+              status: status
+            }
+          });
+          console.log(`Status update email sent for ${status}`);
+        } catch (emailError) {
+          console.error("Failed to send status update email:", emailError);
+        }
+      }
 
       toast({
         title: "Success",
