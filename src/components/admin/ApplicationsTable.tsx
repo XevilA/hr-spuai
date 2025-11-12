@@ -144,14 +144,15 @@ export const ApplicationsTable = () => {
         prev.map((app) => (app.id === id ? { ...app, status } : app))
       );
 
-      // Send status update email for review, approved, and rejected
-      if (["review", "approved", "rejected"].includes(status)) {
+      // Send status update email for reviewing, accepted, and rejected
+      if (["reviewing", "accepted", "rejected"].includes(status)) {
         try {
+          const emailStatus = status === "reviewing" ? "review" : status === "accepted" ? "approved" : status;
           await supabase.functions.invoke("send-application-email", {
             body: {
               to: application.email,
               fullName: application.full_name,
-              status: status
+              status: emailStatus
             }
           });
           console.log(`Status update email sent for ${status}`);
@@ -272,7 +273,7 @@ export const ApplicationsTable = () => {
             <SelectItem value="all">All Status</SelectItem>
             <SelectItem value="pending">Pending</SelectItem>
             <SelectItem value="reviewing">Reviewing</SelectItem>
-            <SelectItem value="approved">Approved</SelectItem>
+            <SelectItem value="accepted">Accepted</SelectItem>
             <SelectItem value="rejected">Rejected</SelectItem>
           </SelectContent>
         </Select>
@@ -318,12 +319,12 @@ export const ApplicationsTable = () => {
                     <SelectTrigger className="w-32">
                       <SelectValue />
                     </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="pending">Pending</SelectItem>
-                      <SelectItem value="reviewing">Reviewing</SelectItem>
-                      <SelectItem value="approved">Approved</SelectItem>
-                      <SelectItem value="rejected">Rejected</SelectItem>
-                    </SelectContent>
+            <SelectContent>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="reviewing">Reviewing</SelectItem>
+              <SelectItem value="accepted">Accepted</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
                   </Select>
                 </TableCell>
                 <TableCell>
