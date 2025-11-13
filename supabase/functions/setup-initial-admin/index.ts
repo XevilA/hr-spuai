@@ -12,6 +12,12 @@ serve(async (req) => {
   }
 
   try {
+    // Get the JWT token from the request
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      throw new Error("No authorization header");
+    }
+
     const supabaseAdmin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -22,6 +28,26 @@ serve(async (req) => {
         },
       }
     );
+
+    // Verify the caller is authenticated and is a super admin
+    const token = authHeader.replace("Bearer ", "");
+    const { data: { user }, error: authError } = await supabaseAdmin.auth.getUser(token);
+    
+    if (authError || !user) {
+      throw new Error("Unauthorized: Invalid authentication");
+    }
+
+    // Check if the caller is a super admin
+    const { data: callerRole, error: roleError } = await supabaseAdmin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .eq("role", "super_admin")
+      .single();
+
+    if (roleError || !callerRole) {
+      throw new Error("Unauthorized: Only super admins can create admin users");
+    }
 
     const { email, password } = await req.json();
 

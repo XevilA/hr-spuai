@@ -16,4 +16,4 @@ verify_jwt = false
 verify_jwt = true
 
 [functions.setup-initial-admin]
-verify_jwt = false
+verify_jwt = true
