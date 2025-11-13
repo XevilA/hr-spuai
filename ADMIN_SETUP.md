@@ -2,22 +2,21 @@
 
 ## 🔐 Super Admin Account
 
-The system is configured to automatically create a super admin when the following email signs up:
-
-**Email:** `dev@dotmini.in.th`  
-**Password:** `arsenal56`
+The initial super admin account must be created securely to prevent unauthorized access.
 
 ## 📝 First-Time Setup
 
 ### Step 1: Create Super Admin Account
 
+**IMPORTANT**: The super admin account should be created through a secure backend process or by an existing super admin user.
+
+Once a super admin account exists, you can:
 1. Go to your website's `/auth` page
-2. Enter the credentials:
-   - Email: `dev@dotmini.in.th`
-   - Password: `arsenal56`
-3. Click "Login" (this will create the account if it doesn't exist)
-4. The super_admin role will be automatically assigned via database trigger
-5. You'll be redirected to the `/admin` dashboard
+2. Enter your secure credentials
+3. Click "Login" to access the admin dashboard
+4. You'll be redirected to the `/admin` dashboard
+
+**Security Note**: Never share admin credentials in documentation or commit them to version control.
 
 ### Step 2: Access Admin Dashboard
 
@@ -100,18 +99,21 @@ Recommended workflow for managing applications:
 
 ## 💡 Tips
 
-- Keep the super admin password secure
+- Keep all admin passwords secure and never share them in documentation
+- Use strong, unique passwords for all admin accounts
 - Regularly review and update application statuses
 - Download CVs before making final decisions
 - Use role titles to clarify responsibilities
 - Only grant super_admin role to trusted individuals
+- Change default passwords immediately after initial setup
 
 ## 🆘 Troubleshooting
 
-**Can't login as super admin?**
-- Make sure you're using the correct email: `dev@dotmini.in.th`
-- Password is case-sensitive: `arsenal56`
+**Can't login as admin?**
+- Verify you're using the correct email and password provided by your super admin
+- Password is case-sensitive
 - Try clearing browser cache and cookies
+- Contact your system administrator if issues persist
 
 **Not seeing admin dashboard after login?**
 - Check that the super_admin role was assigned
