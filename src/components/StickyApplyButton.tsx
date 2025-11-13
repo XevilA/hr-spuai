@@ -15,7 +15,7 @@ export const StickyApplyButton = () => {
 
       {/* Sticky Apply Button */}
       <motion.div
-        className="fixed bottom-8 right-8 z-40"
+        className="hidden md:fixed md:bottom-8 md:right-8 z-40 md:block"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 1 }}
