@@ -140,6 +140,8 @@ export const SignupForm = () => {
       "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [".docx"],
       "image/jpeg": [".jpg", ".jpeg"],
       "image/png": [".png"],
+      "image/heic": [".heic"],
+      "image/heif": [".heif"],
     },
     maxSize: MAX_FILE_SIZE,
     multiple: false,
@@ -155,7 +157,7 @@ export const SignupForm = () => {
           if (err.code === "file-too-large") {
             toast.error("ไฟล์ใหญ่เกินไป (สูงสุด 10MB)");
           } else if (err.code === "file-invalid-type") {
-            toast.error("ประเภทไฟล์ไม่ถูกต้อง (รองรับเฉพาะ PDF, DOCX, JPG, PNG)");
+            toast.error("ประเภทไฟล์ไม่ถูกต้อง (รองรับ: PDF, DOC, DOCX, JPG, PNG, HEIC)");
           }
         });
       });
@@ -181,6 +183,31 @@ export const SignupForm = () => {
     setStep(step - 1);
   };
 
+  // Determine content-type reliably, including HEIC and Word docs
+  const getContentType = (file: File, ext?: string) => {
+    if (file.type && file.type !== "application/octet-stream") return file.type;
+    const e = (ext || "").toLowerCase();
+    switch (e) {
+      case "pdf":
+        return "application/pdf";
+      case "doc":
+        return "application/msword";
+      case "docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+      case "jpg":
+      case "jpeg":
+        return "image/jpeg";
+      case "png":
+        return "image/png";
+      case "heic":
+        return "image/heic";
+      case "heif":
+        return "image/heif";
+      default:
+        return "application/octet-stream";
+    }
+  };
+
   const onSubmit = async (data: ApplicationForm) => {
     console.log("Form submit triggered", { hasFile: !!uploadedFile, data });
     
@@ -195,9 +222,10 @@ export const SignupForm = () => {
       // Upload CV file
       const fileExt = uploadedFile.name.split(".").pop();
       const fileName = `${Date.now()}-${data.email}.${fileExt}`;
+      const contentType = getContentType(uploadedFile, fileExt);
       const { error: uploadError } = await supabase.storage
         .from("cvs")
-        .upload(fileName, uploadedFile);
+        .upload(fileName, uploadedFile, { contentType });
 
       if (uploadError) throw uploadError;
 
@@ -618,7 +646,7 @@ export const SignupForm = () => {
                         ลากไฟล์มาวาง หรือคลิกเพื่อเลือกไฟล์
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        PDF, DOCX, JPG, PNG (สูงสุด 10MB)
+                        PDF, DOC, DOCX, JPG, PNG, HEIC (สูงสุด 10MB)
                       </p>
                     </div>
                   )}
