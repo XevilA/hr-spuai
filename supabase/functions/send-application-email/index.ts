@@ -268,6 +268,11 @@ interface EmailRequest {
   to: string;
   fullName: string;
   status: 'pending' | 'review' | 'approved' | 'rejected';
+  applicationId?: string;
+  cvFilePath?: string;
+  position?: string;
+  email?: string;
+  phone?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -276,8 +281,9 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, fullName, status }: EmailRequest = await req.json();
+    const { to, fullName, status, applicationId, cvFilePath, position, email, phone }: EmailRequest = await req.json();
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 
     if (!RESEND_API_KEY) {
       throw new Error("RESEND_API_KEY is not configured");
@@ -286,6 +292,7 @@ const handler = async (req: Request): Promise<Response> => {
     // Generate email content based on status
     const emailContent = getEmailTemplate(fullName, status);
 
+    // Send email to applicant
     const emailResponse = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -306,7 +313,77 @@ const handler = async (req: Request): Promise<Response> => {
     }
 
     const data = await emailResponse.json();
-    console.log("Email sent successfully:", data);
+    console.log("Email sent successfully to applicant:", data);
+
+    // Send notification to Admin if status is pending and CV file exists
+    if (status === 'pending' && cvFilePath && applicationId) {
+      const cvUrl = `${SUPABASE_URL}/storage/v1/object/public/cvs/${cvFilePath}`;
+      const adminEmail = "dev@dotmini.in.th"; // Admin email
+      
+      const adminEmailHtml = `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { font-family: 'Noto Sans Thai', Arial, sans-serif; line-height: 1.8; margin: 0; padding: 0; background-color: #f5f5f5; }
+              .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+              .header { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); padding: 40px 30px; text-align: center; }
+              .header h1 { color: white; margin: 0; font-size: 28px; font-weight: bold; }
+              .content { padding: 40px 30px; }
+              .info-box { background: #f3f4f6; padding: 20px; border-radius: 12px; margin: 20px 0; }
+              .info-row { margin: 10px 0; color: #374151; }
+              .info-label { font-weight: 600; color: #1f2937; }
+              .button { display: inline-block; background: #8B5CF6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin: 10px 5px; }
+              .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <div class="header">
+                <h1>🔔 ใบสมัครใหม่!</h1>
+              </div>
+              <div class="content">
+                <p style="font-size: 18px; color: #1f2937; font-weight: 600;">มีใบสมัครใหม่เข้ามา</p>
+                <div class="info-box">
+                  <div class="info-row"><span class="info-label">ชื่อ:</span> ${fullName}</div>
+                  <div class="info-row"><span class="info-label">อีเมล:</span> ${email || 'N/A'}</div>
+                  <div class="info-row"><span class="info-label">เบอร์โทร:</span> ${phone || 'N/A'}</div>
+                  <div class="info-row"><span class="info-label">ตำแหน่ง:</span> ${position || 'N/A'}</div>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                  <a href="${cvUrl}" class="button">📄 ดาวน์โหลด CV/Resume</a>
+                  <a href="${SUPABASE_URL}/auth/v1/authorize?provider=google" class="button">👤 ดูใบสมัครเต็ม</a>
+                </div>
+              </div>
+              <div class="footer">
+                <strong>SPU AI CLUB Admin System</strong>
+              </div>
+            </div>
+          </body>
+        </html>
+      `;
+
+      const adminEmailResponse = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Authorization": `Bearer ${RESEND_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          from: "SPU AI CLUB Admin <onboarding@resend.dev>",
+          to: [adminEmail],
+          subject: `ใบสมัครใหม่จาก ${fullName}`,
+          html: adminEmailHtml,
+        }),
+      });
+
+      if (adminEmailResponse.ok) {
+        console.log("Admin notification sent successfully");
+      } else {
+        console.error("Failed to send admin notification:", await adminEmailResponse.text());
+      }
+    }
 
     return new Response(JSON.stringify(data), {
       status: 200,
