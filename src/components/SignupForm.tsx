@@ -251,11 +251,17 @@ export const SignupForm = () => {
 
       // Send confirmation email
       try {
+        const selectedPosition = positions.find(p => p.id === data.position);
         await supabase.functions.invoke("send-application-email", {
           body: {
             to: data.email,
             fullName: data.fullName,
-            status: "pending"
+            status: "pending",
+            applicationId: insertData?.[0]?.id,
+            cvFilePath: fileName,
+            position: selectedPosition?.title || "ไม่ระบุ",
+            email: data.email,
+            phone: data.phone
           },
         });
       } catch (emailError) {
