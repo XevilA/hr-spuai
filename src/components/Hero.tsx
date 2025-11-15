@@ -11,7 +11,7 @@ export const Hero = () => {
       {/* Video Background */}
       <div className="absolute inset-0 z-0">
         <video
-          src="https://nyzdegtzgyrhwgcvlvuq.supabase.co/storage/v1/object/public/media/uploads/1762890395962_nx4nea3oa.mp4"
+          src="https://nyzdegtzgyrhwgcvlvuq.supabase.co/storage/v1/object/public/media/uploads/1763197991879_goopto67k.mp4"
           autoPlay
           loop
           muted
