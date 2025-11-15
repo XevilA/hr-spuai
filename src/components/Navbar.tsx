@@ -21,6 +21,7 @@ const Navbar = () => {
     { name: "Positions", path: "/positions" },
     { name: "Projects", path: "/projects" },
     { name: "Contact", path: "/contact" },
+    { name: "ติดตามสถานะ", path: "/track" },
   ];
 
   return (
@@ -41,29 +42,23 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/" className="flex items-center">
-            <motion.span
-              animate={{
-                color: isScrolled ? "hsl(var(--foreground))" : "#ffffff"
-              }}
-              transition={{ duration: 0.3 }}
-              className="text-xl font-bold"
+            <span
+              className="text-xl font-bold transition-colors duration-300"
               style={{ 
-                backgroundImage: isScrolled ? undefined : "linear-gradient(135deg, #FF1694 0%, #FF69B4 100%)",
-                WebkitBackgroundClip: isScrolled ? undefined : "text",
-                WebkitTextFillColor: isScrolled ? undefined : "transparent"
+                color: isScrolled ? "hsl(var(--foreground))" : "#ffffff"
               }}
             >
               SPU AI CLUB
-            </motion.span>
+            </span>
           </NavLink>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {navItems.map((item) => (
-              <motion.div key={item.path}>
+              <div key={item.path}>
                 <NavLink
                   to={item.path}
-                  className="text-sm font-medium transition-colors relative py-2"
+                  className="text-sm font-medium transition-colors relative py-2 hover:opacity-80"
                   style={{
                     color: isScrolled ? "hsl(var(--foreground) / 0.7)" : "rgba(255, 255, 255, 0.9)"
                   }}
@@ -74,23 +69,22 @@ const Navbar = () => {
                 >
                   {item.name}
                 </NavLink>
-              </motion.div>
+              </div>
             ))}
           </div>
 
           {/* Mobile Menu Button */}
-          <motion.button
+          <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden p-2 rounded-lg transition-colors"
+            className="md:hidden p-2 rounded-lg transition-all hover:opacity-80"
             style={{
               color: isScrolled ? "hsl(var(--foreground))" : "#ffffff",
               backgroundColor: isScrolled ? "hsl(var(--muted) / 0.5)" : "rgba(255, 255, 255, 0.1)"
             }}
-            whileTap={{ scale: 0.95 }}
             aria-label="Toggle menu"
           >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
-          </motion.button>
+          </button>
         </div>
       </div>
 
