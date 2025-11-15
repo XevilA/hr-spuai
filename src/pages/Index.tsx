@@ -7,10 +7,11 @@ import { Testimonials } from "@/components/Testimonials";
 import { Footer } from "@/components/Footer";
 import { SignupForm } from "@/components/SignupForm";
 import { ChatbotButton } from "@/components/ChatbotButton";
+import { StickyApplyButton } from "@/components/StickyApplyButton";
 
 const Index = () => {
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen scroll-smooth">
       <Navbar />
       <Hero />
       <Showcase />
@@ -63,6 +64,7 @@ const Index = () => {
       <Testimonials />
       <Footer />
       <ChatbotButton />
+      <StickyApplyButton />
     </div>
   );
 };
