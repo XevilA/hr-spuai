@@ -34,6 +34,7 @@ const applicationSchema = z.object({
   position: z.string().min(1, "กรุณาเลือกตำแหน่งที่สมัคร"),
   fullName: z.string().min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร"),
   nickname: z.string().min(1, "กรุณากรอกชื่อเล่น"),
+  university: z.string().min(1, "กรุณาเลือกมหาวิทยาลัย"),
   universityYear: z.string().min(1, "กรุณาเลือกชั้นปี"),
   faculty: z.string().min(2, "กรุณากรอกคณะ"),
   major: z.string().min(2, "กรุณากรอกสาขา"),
@@ -234,6 +235,7 @@ export const SignupForm = () => {
         position_id: data.position,
         full_name: data.fullName,
         nickname: data.nickname,
+        university: data.university,
         university_year: parseInt(data.universityYear),
         faculty: data.faculty,
         major: data.major,
@@ -445,6 +447,38 @@ export const SignupForm = () => {
                     <p className="text-destructive text-sm mt-1">{errors.nickname.message}</p>
                   )}
                 </div>
+              </div>
+
+              <div>
+                <Label htmlFor="university">มหาวิทยาลัย *</Label>
+                <Select
+                  onValueChange={(value) => setValue("university", value)}
+                  value={watch("university")}
+                >
+                  <SelectTrigger className="mt-1">
+                    <SelectValue placeholder="เลือกมหาวิทยาลัย" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="จุฬาลงกรณ์มหาวิทยาลัย">จุฬาลงกรณ์มหาวิทยาลัย</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยธรรมศาสตร์">มหาวิทยาลัยธรรมศาสตร์</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยมหิดล">มหาวิทยาลัยมหิดล</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยเกษตรศาสตร์">มหาวิทยาลัยเกษตรศาสตร์</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยศรีนครินทรวิโรฒ">มหาวิทยาลัยศรีนครินทรวิโรฒ</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยรามคำแหง">มหาวิทยาลัยรามคำแหง</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยศิลปากร">มหาวิทยาลัยศิลปากร</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี">มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าธนบุรี</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ">มหาวิทยาลัยเทคโนโลยีพระจอมเกล้าพระนครเหนือ</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยเทคโนโลยีราชมงคล">มหาวิทยาลัยเทคโนโลยีราชมงคล</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยสยาม">มหาวิทยาลัยสยาม</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยกรุงเทพ">มหาวิทยาลัยกรุงเทพ</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยหอการค้าไทย">มหาวิทยาลัยหอการค้าไทย</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยอัสสัมชัญ">มหาวิทยาลัยอัสสัมชัญ</SelectItem>
+                    <SelectItem value="อื่นๆ">อื่นๆ</SelectItem>
+                  </SelectContent>
+                </Select>
+                {errors.university && (
+                  <p className="text-destructive text-sm mt-1">{errors.university.message}</p>
+                )}
               </div>
 
               <div>

@@ -34,6 +34,7 @@ export type Database = {
           portfolio_url: string | null
           position_id: string | null
           status: string | null
+          university: string | null
           university_year: number
           updated_at: string | null
         }
@@ -56,6 +57,7 @@ export type Database = {
           portfolio_url?: string | null
           position_id?: string | null
           status?: string | null
+          university?: string | null
           university_year: number
           updated_at?: string | null
         }
@@ -78,6 +80,7 @@ export type Database = {
           portfolio_url?: string | null
           position_id?: string | null
           status?: string | null
+          university?: string | null
           university_year?: number
           updated_at?: string | null
         }
