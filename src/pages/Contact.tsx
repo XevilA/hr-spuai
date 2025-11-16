@@ -1,20 +1,14 @@
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useRef } from "react";
+import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
 import { ChatbotButton } from "@/components/ChatbotButton";
 import { Card } from "@/components/ui/card";
-import { Mail, Phone, MapPin, Facebook, Instagram } from "lucide-react";
+import { Mail, Phone, MapPin, Facebook, Instagram, ArrowLeft } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Contact = () => {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"],
-  });
-
-  const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
-  const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const navigate = useNavigate();
 
   const contacts = [
     {
@@ -59,70 +53,41 @@ const Contact = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background" ref={containerRef}>
+    <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Hero Section with Parallax */}
-      <motion.section 
-        style={{ y, opacity }}
-        className="relative pt-32 pb-20 overflow-hidden"
-      >
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-primary/5" />
-        
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-center max-w-4xl mx-auto"
+      {/* Header */}
+      <div className="bg-midnight-blue py-20 pt-32">
+        <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-8 text-white hover:text-spu-pink"
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-block mb-6 px-6 py-2 bg-primary/10 rounded-full border border-primary/20"
-            >
-              <span className="text-primary font-semibold text-sm tracking-wider uppercase">
-                Get In Touch
-              </span>
-            </motion.div>
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
 
-            <h1 className="text-5xl sm:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              Contact Us
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
+              Contact{" "}
+              <span className="text-spu-pink">
+                Us
+              </span>
             </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground leading-relaxed">
+            <p className="text-xl text-white/80 max-w-3xl">
               มีคำถามหรือต้องการความช่วยเหลือ? เราพร้อมให้บริการคุณ
             </p>
           </motion.div>
         </div>
-
-        {/* Animated Background Elements */}
-        <motion.div
-          animate={{
-            scale: [1, 1.2, 1],
-            opacity: [0.3, 0.5, 0.3],
-          }}
-          transition={{
-            duration: 8,
-            repeat: Infinity,
-          }}
-          className="absolute top-1/4 right-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl"
-        />
-        <motion.div
-          animate={{
-            scale: [1.2, 1, 1.2],
-            opacity: [0.5, 0.3, 0.5],
-          }}
-          transition={{
-            duration: 10,
-            repeat: Infinity,
-          }}
-          className="absolute bottom-1/4 left-1/4 w-96 h-96 rounded-full bg-primary/10 blur-3xl"
-        />
-      </motion.section>
+      </div>
 
       {/* Contact Information Cards */}
-      <section className="py-20 relative">
+      <section className="py-16 px-4">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-20">
             {contacts.map((contact, index) => (
