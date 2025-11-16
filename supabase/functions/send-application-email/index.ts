@@ -88,8 +88,29 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log('Emails queued successfully');
 
+    // Auto-trigger email queue processing
+    try {
+      console.log('Triggering email queue processing...');
+      const processResponse = await fetch(`${supabaseUrl}/functions/v1/process-email-queue`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (processResponse.ok) {
+        console.log('Email queue processing triggered successfully');
+      } else {
+        console.warn('Failed to trigger email queue processing:', await processResponse.text());
+      }
+    } catch (triggerError) {
+      console.error('Error triggering email queue:', triggerError);
+      // Don't fail the request if triggering fails
+    }
+
     return new Response(
-      JSON.stringify({ success: true, message: "Emails queued for sending" }),
+      JSON.stringify({ success: true, message: "Emails queued and processing started" }),
       {
         status: 200,
         headers: {
