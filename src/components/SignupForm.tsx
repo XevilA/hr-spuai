@@ -670,6 +670,9 @@ export const SignupForm = () => {
 
               <div>
                 <Label>Resume / CV (ไม่บังคับ)</Label>
+                <p className="text-sm text-muted-foreground mt-1 mb-2">
+                  📸 หากไม่มี CV สามารถ Selfie รูปหน้าตัวเองได้
+                </p>
                 <div
                   {...getRootProps()}
                   className={`mt-1 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
