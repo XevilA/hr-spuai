@@ -477,6 +477,7 @@ export const SignupForm = () => {
                     <SelectItem value="มหาวิทยาลัยกรุงเทพ">มหาวิทยาลัยกรุงเทพ</SelectItem>
                     <SelectItem value="มหาวิทยาลัยหอการค้าไทย">มหาวิทยาลัยหอการค้าไทย</SelectItem>
                     <SelectItem value="มหาวิทยาลัยอัสสัมชัญ">มหาวิทยาลัยอัสสัมชัญ</SelectItem>
+                    <SelectItem value="มหาวิทยาลัยศรีปทุม">มหาวิทยาลัยศรีปทุม</SelectItem>
                     <SelectItem value="อื่นๆ">อื่นๆ</SelectItem>
                   </SelectContent>
                 </Select>
