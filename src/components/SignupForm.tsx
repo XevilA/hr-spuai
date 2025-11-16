@@ -211,11 +211,6 @@ export const SignupForm = () => {
 
   const onSubmit = async (data: ApplicationForm) => {
     console.log("Form submit triggered", { hasFile: !!uploadedFile, data });
-    
-    if (!uploadedFile) {
-      toast.error("กรุณาอัพโหลดไฟล์ Resume/CV");
-      return;
-    }
 
     setIsSubmitting(true);
 
@@ -223,15 +218,19 @@ export const SignupForm = () => {
       // Generate unique tracking token
       const trackingToken = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
       
-      // Upload CV file
-      const fileExt = uploadedFile.name.split(".").pop();
-      const fileName = `${Date.now()}-${data.email}.${fileExt}`;
-      const contentType = getContentType(uploadedFile, fileExt);
-      const { error: uploadError } = await supabase.storage
-        .from("cvs")
-        .upload(fileName, uploadedFile, { contentType });
+      let fileName = null;
+      
+      // Upload CV file if provided
+      if (uploadedFile) {
+        const fileExt = uploadedFile.name.split(".").pop();
+        fileName = `${Date.now()}-${data.email}.${fileExt}`;
+        const contentType = getContentType(uploadedFile, fileExt);
+        const { error: uploadError } = await supabase.storage
+          .from("cvs")
+          .upload(fileName, uploadedFile, { contentType });
 
-      if (uploadError) throw uploadError;
+        if (uploadError) throw uploadError;
+      }
 
       // Insert application
       const { data: insertData, error: insertError } = await supabase.from("applications").insert({
@@ -669,7 +668,7 @@ export const SignupForm = () => {
               </div>
 
               <div>
-                <Label>Resume / CV *</Label>
+                <Label>Resume / CV (ไม่บังคับ)</Label>
                 <div
                   {...getRootProps()}
                   className={`mt-1 border-2 border-dashed rounded-xl p-8 text-center cursor-pointer transition-all ${
@@ -696,10 +695,13 @@ export const SignupForm = () => {
                     </div>
                   )}
                 </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  💡 การแนบ Resume/CV จะช่วยให้เราพิจารณาใบสมัครของคุณได้ดียิ่งขึ้น
+                </p>
               </div>
 
               <p className="text-sm text-muted-foreground mt-4">
-                เยี่ยมมาก! พร้อมส่งใบสมัครแล้ว 🎉
+                เยี่ยมมาก! ตรวจสอบข้อมูลและพร้อมส่งใบสมัครแล้ว 🎉
               </p>
             </motion.div>
           )}
