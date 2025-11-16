@@ -1,15 +1,15 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Mail, Phone, CheckCircle, Clock, XCircle, FileText, Download } from "lucide-react";
+import { Search, Mail, Phone, CheckCircle, Clock, XCircle, FileText, Download, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 
 interface Application {
   id: string;
@@ -29,6 +29,7 @@ interface Position {
 
 const TrackApplication = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [searchType, setSearchType] = useState<"email" | "phone">("email");
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
@@ -106,29 +107,10 @@ const TrackApplication = () => {
       default:
         return {
           icon: <Clock className="w-8 h-8 text-gray-500" />,
-          text: "ไม่ทราบสถานะ",
-          description: "ไม่สามารถระบุสถานะได้",
+          text: "สถานะไม่ทราบ",
+          description: "กรุณาติดต่อทีมงานเพื่อสอบถามข้อมูลเพิ่มเติม",
           color: "border-gray-500 bg-gray-50"
         };
-    }
-  };
-
-  const handleDownloadCV = async () => {
-    if (!application?.cv_file_path) return;
-
-    try {
-      const { data, error } = await supabase.storage
-        .from("cvs")
-        .createSignedUrl(application.cv_file_path, 3600);
-
-      if (error) throw error;
-
-      if (data?.signedUrl) {
-        window.open(data.signedUrl, "_blank");
-      }
-    } catch (error) {
-      console.error("Error downloading CV:", error);
-      toast.error("ไม่สามารถเปิดไฟล์ CV ได้");
     }
   };
 
@@ -155,7 +137,7 @@ const TrackApplication = () => {
       if (error) throw error;
 
       if (!data) {
-        toast.error("ไม่พบใบสมัครที่ตรงกับข้อมูลที่ค้นหา");
+        toast.error("ไม่พบใบสมัครที่ตรงกับข้อมูลนี้");
         return;
       }
 
@@ -172,119 +154,214 @@ const TrackApplication = () => {
     }
   };
 
+  const handleDownloadCV = async () => {
+    if (!application?.cv_file_path) return;
+
+    try {
+      const { data, error } = await supabase.storage
+        .from("cvs")
+        .download(application.cv_file_path);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = application.cv_file_path;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      toast.success("ดาวน์โหลด CV สำเร็จ");
+    } catch (error) {
+      console.error("Error downloading CV:", error);
+      toast.error("ไม่สามารถดาวน์โหลด CV ได้");
+    }
+  };
+
   const statusInfo = application ? getStatusInfo(application.status) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30">
+    <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-24">
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-          className="max-w-3xl mx-auto"
-        >
-          <div className="text-center mb-16">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.1, duration: 0.6 }}
-              className="inline-block mb-6 px-6 py-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-full border border-gray-200/60 shadow-sm"
-            >
-              <span className="text-gray-700 font-semibold text-sm tracking-wider">APPLICATION STATUS</span>
-            </motion.div>
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2, duration: 0.6 }}
-              className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent"
-            >
-              ติดตามสถานะใบสมัคร
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.3, duration: 0.6 }}
-              className="text-xl text-gray-600 leading-relaxed"
-            >
-              ค้นหาใบสมัครของคุณด้วยอีเมลหรือเบอร์โทรศัพท์
-            </motion.p>
-          </div>
+      
+      {/* Header */}
+      <div className="bg-midnight-blue py-20 pt-32">
+        <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-8 text-white hover:text-spu-pink"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}>
-            <Card className="p-8 mb-8 backdrop-blur-xl bg-white/80 border-gray-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500">
-              <div className="space-y-6">
-                <div className="flex gap-3 mb-6">
-                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button onClick={() => setSearchType("email")} variant={searchType === "email" ? "default" : "outline"} className="w-full h-12 font-medium transition-all duration-300">
-                      <Mail className="w-4 h-4 mr-2" />ค้นหาด้วยอีเมล
-                    </Button>
-                  </motion.div>
-                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-                    <Button onClick={() => setSearchType("phone")} variant={searchType === "phone" ? "default" : "outline"} className="w-full h-12 font-medium transition-all duration-300">
-                      <Phone className="w-4 h-4 mr-2" />ค้นหาด้วยเบอร์โทร
-                    </Button>
-                  </motion.div>
-                </div>
-
-                <div>
-                  <Label htmlFor="search" className="text-sm font-medium text-gray-700">{searchType === "email" ? "อีเมล" : "เบอร์โทรศัพท์"}</Label>
-                  <Input id="search" type={searchType === "email" ? "email" : "tel"} placeholder={searchType === "email" ? "example@email.com" : "0812345678"} value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="mt-2 h-12 border-gray-200 focus:border-gray-300 transition-all duration-300" />
-                </div>
-
-                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                  <Button onClick={handleSearch} disabled={loading || !searchValue} className="w-full h-12 font-medium shadow-md hover:shadow-lg transition-all duration-300">
-                    {loading ? <><Search className="w-4 h-4 mr-2 animate-spin" />กำลังค้นหา...</> : <><Search className="w-4 h-4 mr-2" />ค้นหา</>}
-                  </Button>
-                </motion.div>
-              </div>
-            </Card>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
+              Track{" "}
+              <span className="text-spu-pink">
+                Application
+              </span>
+            </h1>
+            <p className="text-xl text-white/80 max-w-3xl">
+              ตรวจสอบสถานะการสมัครของคุณด้วยอีเมลหรือเบอร์โทรศัพท์
+            </p>
           </motion.div>
+        </div>
+      </div>
 
+      <div className="container mx-auto px-4 py-16">
+        <div className="max-w-2xl mx-auto">
+          {/* Search Form */}
+          <Card className="border-2 hover:border-spu-pink/50 transition-colors duration-300 mb-8">
+            <CardContent className="p-8">
+              <div className="space-y-6">
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant={searchType === "email" ? "default" : "outline"}
+                    onClick={() => setSearchType("email")}
+                    className="flex-1"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    อีเมล
+                  </Button>
+                  <Button
+                    type="button"
+                    variant={searchType === "phone" ? "default" : "outline"}
+                    onClick={() => setSearchType("phone")}
+                    className="flex-1"
+                  >
+                    <Phone className="mr-2 h-4 w-4" />
+                    เบอร์โทร
+                  </Button>
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="search">
+                    {searchType === "email" ? "อีเมลของคุณ" : "เบอร์โทรศัพท์"}
+                  </Label>
+                  <Input
+                    id="search"
+                    type={searchType === "email" ? "email" : "tel"}
+                    value={searchValue}
+                    onChange={(e) => setSearchValue(e.target.value)}
+                    placeholder={
+                      searchType === "email" 
+                        ? "example@email.com" 
+                        : "0812345678"
+                    }
+                    className="text-lg py-6"
+                  />
+                </div>
+
+                <Button
+                  onClick={handleSearch}
+                  disabled={loading || !searchValue}
+                  className="w-full py-6 text-lg"
+                  size="lg"
+                >
+                  {loading ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+                      กำลังค้นหา...
+                    </>
+                  ) : (
+                    <>
+                      <Search className="mr-2 h-5 w-5" />
+                      ค้นหาใบสมัคร
+                    </>
+                  )}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Application Status */}
           {application && statusInfo && (
-            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
-              <Card className="p-8 backdrop-blur-xl bg-white/90 border-gray-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.08)] overflow-hidden">
-                <div className="space-y-8">
-                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className={`relative p-8 rounded-3xl border-2 ${statusInfo.color} backdrop-blur-sm transition-all duration-500 overflow-hidden group`}>
-                    <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                    <div className="relative flex items-center gap-6">
-                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}>{statusInfo.icon}</motion.div>
-                      <div className="flex-1">
-                        <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="text-2xl font-bold mb-2">{statusInfo.text}</motion.h3>
-                        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="text-gray-600 leading-relaxed">{statusInfo.description}</motion.p>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <Card className={`border-2 hover:shadow-xl transition-shadow duration-300 ${statusInfo.color}`}>
+                <CardContent className="p-8">
+                  {/* Status Header */}
+                  <div className="flex items-center gap-4 mb-8 pb-6 border-b-2 border-border">
+                    {statusInfo.icon}
+                    <div>
+                      <h2 className="text-3xl font-bold">{statusInfo.text}</h2>
+                      <p className="text-muted-foreground mt-1">{statusInfo.description}</p>
+                    </div>
+                  </div>
+
+                  {/* Application Details */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">ชื่อผู้สมัคร</p>
+                        <p className="text-lg font-semibold">{application.full_name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">ตำแหน่งที่สมัคร</p>
+                        <p className="text-lg font-semibold text-spu-pink">
+                          {position?.title || "กำลังโหลด..."}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">มหาวิทยาลัย</p>
+                        <p className="text-lg font-semibold">{application.university}</p>
                       </div>
                     </div>
-                  </motion.div>
+                    
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">คณะ</p>
+                        <p className="text-lg font-semibold">{application.faculty}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">สาขา</p>
+                        <p className="text-lg font-semibold">{application.major}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground mb-1">วันที่สมัคร</p>
+                        <p className="text-lg font-semibold">
+                          {new Date(application.created_at).toLocaleDateString('th-TH', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric',
+                          })}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
 
-                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-4">
-                    {[
-                      { label: "ชื่อ-นามสกุล", value: application.full_name },
-                      { label: "ตำแหน่งที่สมัคร", value: position?.title || "N/A" },
-                      { label: "มหาวิทยาลัย", value: application.university || "N/A" },
-                      { label: "คณะ", value: application.faculty },
-                      { label: "สาขา", value: application.major },
-                      { label: "วันที่สมัคร", value: new Date(application.created_at).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) },
-                    ].map((item, index) => (
-                      <motion.div key={item.label} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 + index * 0.05 }} whileHover={{ scale: 1.02, transition: { duration: 0.2 } }} className="p-5 bg-gradient-to-br from-gray-50 to-gray-50/50 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300">
-                        <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">{item.label}</p>
-                        <p className="font-semibold text-gray-900 text-lg">{item.value}</p>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-
+                  {/* CV Download */}
                   {application.cv_file_path && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
-                      <Button onClick={handleDownloadCV} variant="outline" className="w-full h-14 text-base font-medium border-2 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md">
-                        <Download className="w-5 h-5 mr-2" />ดาวน์โหลด CV
+                    <div className="mt-6 pt-6 border-t-2 border-border">
+                      <Button
+                        onClick={handleDownloadCV}
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        ดาวน์โหลด CV
                       </Button>
-                    </motion.div>
+                    </div>
                   )}
-                </div>
+                </CardContent>
               </Card>
             </motion.div>
           )}
-        </motion.div>
+        </div>
       </div>
+
       <Footer />
     </div>
   );
