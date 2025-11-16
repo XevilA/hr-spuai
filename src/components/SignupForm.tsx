@@ -220,6 +220,9 @@ export const SignupForm = () => {
     setIsSubmitting(true);
 
     try {
+      // Generate unique tracking token
+      const trackingToken = `${Date.now()}-${Math.random().toString(36).substring(2, 15)}`;
+      
       // Upload CV file
       const fileExt = uploadedFile.name.split(".").pop();
       const fileName = `${Date.now()}-${data.email}.${fileExt}`;
@@ -247,6 +250,7 @@ export const SignupForm = () => {
         interests_skills: data.interestsSkills,
         motivation: data.motivation,
         cv_file_path: fileName,
+        tracking_token: trackingToken,
       }).select();
 
       if (insertError) throw insertError;
@@ -263,7 +267,8 @@ export const SignupForm = () => {
             cvFilePath: fileName,
             position: selectedPosition?.title || "ไม่ระบุ",
             email: data.email,
-            phone: data.phone
+            phone: data.phone,
+            trackingToken: trackingToken
           },
         });
       } catch (emailError) {

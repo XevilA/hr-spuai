@@ -27,6 +27,8 @@ function getEmailTemplate(fullName: string, status: string) {
               .message p:last-child { margin-bottom: 0; }
               .highlight { background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; }
               .highlight-text { font-size: 18px; font-weight: 600; margin: 0; }
+              .btn { display: inline-block; background: linear-gradient(135deg, #8B5CF6 0%, #6D28D9 100%); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; margin: 20px 0; }
+              .btn:hover { opacity: 0.9; }
               .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
               .footer strong { color: #374151; display: block; margin-bottom: 10px; font-size: 16px; }
               .divider { height: 1px; background: #e5e7eb; margin: 25px 0; }
@@ -47,6 +49,15 @@ function getEmailTemplate(fullName: string, status: string) {
                 <div class="highlight">
                   <p class="highlight-text">⏱️ อยู่ระหว่างการพิจารณา</p>
                   <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.95;">กรุณารอประมาณ 1-2 วัน</p>
+                </div>
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="https://urcywqpdbyrduzfzvvne.lovableproject.com/track?token={{TRACKING_TOKEN}}" class="btn">
+                    🔍 ติดตามสถานะใบสมัคร
+                  </a>
+                  <p style="color: #6b7280; font-size: 13px; margin-top: 15px;">
+                    หรือคลิกลิงก์นี้: <br/>
+                    <span style="color: #8B5CF6; word-break: break-all;">https://urcywqpdbyrduzfzvvne.lovableproject.com/track?token={{TRACKING_TOKEN}}</span>
+                  </p>
                 </div>
                 <p style="color: #6b7280; font-size: 14px; margin-top: 25px;">
                   💡 <strong>คำแนะนำ:</strong> หากมีคำถามหรือต้องการข้อมูลเพิ่มเติม สามารถสอบถามได้ผ่านทาง AI Chatbot "น้องกรีน" บนเว็บไซต์ของเราตลอด 24 ชั่วโมง
@@ -273,6 +284,7 @@ interface EmailRequest {
   position?: string;
   email?: string;
   phone?: string;
+  trackingToken?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -281,7 +293,7 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const { to, fullName, status, applicationId, cvFilePath, position, email, phone }: EmailRequest = await req.json();
+    const { to, fullName, status, applicationId, cvFilePath, position, email, phone, trackingToken }: EmailRequest = await req.json();
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
 
@@ -291,6 +303,12 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Generate email content based on status
     const emailContent = getEmailTemplate(fullName, status);
+    
+    // Replace tracking token placeholder if provided
+    let emailHtml = emailContent.html;
+    if (trackingToken) {
+      emailHtml = emailHtml.replace(/{{TRACKING_TOKEN}}/g, trackingToken);
+    }
 
     // Send email to applicant
     const emailResponse = await fetch("https://api.resend.com/emails", {
@@ -303,7 +321,7 @@ const handler = async (req: Request): Promise<Response> => {
         from: "SPU AI CLUB <onboarding@resend.dev>",
         to: [to],
         subject: emailContent.subject,
-        html: emailContent.html,
+        html: emailHtml,
       }),
     });
 
