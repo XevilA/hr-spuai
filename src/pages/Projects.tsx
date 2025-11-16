@@ -5,7 +5,9 @@ import { Footer } from "@/components/Footer";
 import { ChatbotButton } from "@/components/ChatbotButton";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, FolderOpen } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface Project {
   id: string;
@@ -18,6 +20,7 @@ interface Project {
 const Projects = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchProjects();
@@ -39,112 +42,107 @@ const Projects = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-spu-pink"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <main className="pt-24 pb-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {/* Header */}
+      {/* Header */}
+      <div className="bg-midnight-blue py-20 pt-32">
+        <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-8 text-white hover:text-spu-pink"
+          >
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-center mb-20"
+            transition={{ duration: 0.6 }}
           >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="inline-block mb-6 px-6 py-2 bg-primary/10 rounded-full border border-primary/20"
-            >
-              <span className="text-primary font-semibold text-sm tracking-wider uppercase">
-                Featured Projects
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
+              Our{" "}
+              <span className="text-spu-pink">
+                Projects
               </span>
-            </motion.div>
-            
-            <h1 className="text-5xl sm:text-7xl font-bold mb-6 bg-gradient-to-r from-primary via-primary/80 to-primary/60 bg-clip-text text-transparent">
-              Our Projects
             </h1>
-            <p className="text-xl sm:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed mb-4">
+            <p className="text-xl text-white/80 max-w-3xl">
               สำรวจโครงการและกิจกรรมต่างๆ ของชมรม AI ที่เราได้พัฒนาและดำเนินการ
             </p>
-            <p className="text-lg text-muted-foreground/80 max-w-2xl mx-auto">
-              จากการวิจัยและพัฒนา ไปจนถึงกิจกรรมเชิงปฏิบัติการ เราสร้างสรรค์นวัตกรรม AI 
-              เพื่อแก้ปัญหาและสร้างผลกระทบเชิงบวกต่อสังคม
-            </p>
           </motion.div>
+        </div>
+      </div>
 
-          {/* Projects Grid */}
-          {loading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {[...Array(6)].map((_, i) => (
-                <Card key={i} className="h-full overflow-hidden">
-                  <Skeleton className="aspect-video w-full" />
-                  <CardHeader>
-                    <Skeleton className="h-6 w-3/4 mb-2" />
-                    <Skeleton className="h-4 w-full" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex gap-2">
-                      <Skeleton className="h-6 w-16" />
-                      <Skeleton className="h-6 w-20" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          ) : projects.length === 0 ? (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center py-20"
-            >
-              <p className="text-xl text-muted-foreground">
-                ยังไม่มีโครงการที่จะแสดง กรุณากลับมาดูใหม่ในภายหลัง
+      {/* Projects List */}
+      <div className="container mx-auto px-4 py-16">
+        {projects.length === 0 ? (
+          <Card className="max-w-2xl mx-auto">
+            <CardContent className="py-16 text-center">
+              <FolderOpen className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+              <h3 className="text-2xl font-semibold mb-2">ยังไม่มีโครงการ</h3>
+              <p className="text-muted-foreground">
+                กำลังพัฒนาโครงการใหม่ๆ โปรดติดตามเร็วๆ นี้!
               </p>
-            </motion.div>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project, index) => (
-                <motion.div
-                  key={project.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                >
-                  <Card className="h-full hover-lift overflow-hidden group">
-                    <div className="aspect-video overflow-hidden bg-muted">
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="grid gap-8 max-w-5xl mx-auto">
+            {projects.map((project, index) => (
+              <motion.div
+                key={project.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+              >
+                <Card className="hover:shadow-xl transition-shadow duration-300 border-2 hover:border-spu-pink/50 overflow-hidden">
+                  <div className="md:flex">
+                    <div className="md:w-1/3 aspect-video md:aspect-auto relative overflow-hidden bg-muted">
                       <img
                         src={project.image_url}
                         alt={project.title}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
                       />
                     </div>
-                    <CardHeader>
-                      <CardTitle className="text-xl">{project.title}</CardTitle>
-                      <CardDescription>{project.description}</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="flex flex-wrap gap-2">
-                        {project.tags.map((tag) => (
-                          <span
-                            key={tag}
-                            className="px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary"
-                          >
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-          )}
-        </div>
-      </main>
+                    <div className="md:w-2/3">
+                      <CardHeader>
+                        <CardTitle className="text-3xl mb-2 text-spu-pink">
+                          {project.title}
+                        </CardTitle>
+                        <CardDescription className="text-base">
+                          {project.description}
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="flex flex-wrap gap-2">
+                          {project.tags.map((tag, tagIndex) => (
+                            <span
+                              key={tagIndex}
+                              className="px-3 py-1 text-sm font-medium bg-spu-pink/10 text-spu-pink rounded-full border border-spu-pink/20"
+                            >
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </div>
+                  </div>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
 
       <Footer />
       <ChatbotButton />
