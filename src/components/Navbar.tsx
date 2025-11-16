@@ -43,13 +43,12 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <NavLink to="/" className="flex items-center">
-            <span
-              className="text-xl font-bold transition-colors duration-300"
-              style={{ 
-                color: isScrolled ? "hsl(var(--foreground))" : "#ffffff"
-              }}
-            >
-              SPU AI CLUB
+            <span className="text-xl font-bold transition-colors duration-300">
+              <span className="text-spu-pink">SPU AI</span>
+              {" "}
+              <span style={{ color: isScrolled ? "#0A0A2A" : "#ffffff" }}>
+                CLUB
+              </span>
             </span>
           </NavLink>
 
