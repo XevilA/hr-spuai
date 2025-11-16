@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Search, Mail, Phone, CheckCircle, Clock, XCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,6 +9,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
+import { useSearchParams } from "react-router-dom";
 
 interface Application {
   id: string;
@@ -26,11 +27,52 @@ interface Position {
 }
 
 const TrackApplication = () => {
+  const [searchParams] = useSearchParams();
   const [searchType, setSearchType] = useState<"email" | "phone">("email");
   const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [application, setApplication] = useState<Application | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
+
+  // Auto-search by token if provided in URL
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      handleSearchByToken(token);
+    }
+  }, [searchParams]);
+
+  const handleSearchByToken = async (token: string) => {
+    setLoading(true);
+    setApplication(null);
+    setPosition(null);
+
+    try {
+      const { data, error } = await supabase
+        .from("applications")
+        .select("*, positions(title)")
+        .eq("tracking_token", token)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!data) {
+        toast.error("ไม่พบใบสมัครจากลิงก์นี้");
+        return;
+      }
+
+      setApplication(data);
+      if (data.positions) {
+        setPosition(data.positions as any);
+      }
+      toast.success("พบข้อมูลใบสมัครของคุณ");
+    } catch (error) {
+      console.error("Error searching by token:", error);
+      toast.error("เกิดข้อผิดพลาดในการค้นหา");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const getStatusInfo = (status: string) => {
     switch (status) {
