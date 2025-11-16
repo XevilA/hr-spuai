@@ -35,7 +35,6 @@ const TrackApplication = () => {
   const [application, setApplication] = useState<Application | null>(null);
   const [position, setPosition] = useState<Position | null>(null);
 
-  // Auto-search by token if provided in URL
   useEffect(() => {
     const token = searchParams.get("token");
     if (token) {
@@ -56,7 +55,6 @@ const TrackApplication = () => {
         .maybeSingle();
 
       if (error) throw error;
-
       if (!data) {
         toast.error("ไม่พบใบสมัครจากลิงก์นี้");
         return;
@@ -115,11 +113,13 @@ const TrackApplication = () => {
     }
   };
 
-  const handleDownloadCV = async (cvPath: string) => {
+  const handleDownloadCV = async () => {
+    if (!application?.cv_file_path) return;
+
     try {
       const { data, error } = await supabase.storage
         .from("cvs")
-        .createSignedUrl(cvPath, 3600); // URL valid for 1 hour
+        .createSignedUrl(application.cv_file_path, 3600);
 
       if (error) throw error;
 
@@ -175,154 +175,116 @@ const TrackApplication = () => {
   const statusInfo = application ? getStatusInfo(application.status) : null;
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-b from-background to-muted/20">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50/50 via-white to-gray-50/30">
       <Navbar />
-      
-      <main className="flex-1 container mx-auto px-4 py-24">
+      <div className="container mx-auto px-4 py-24">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-2xl mx-auto"
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="max-w-3xl mx-auto"
         >
-          <div className="text-center mb-12">
-            <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-spu-pink to-spu-blue bg-clip-text text-transparent">
-              ตรวจสอบสถานะใบสมัคร
-            </h1>
-            <p className="text-muted-foreground text-lg">
-              ค้นหาใบสมัครของคุณด้วยอีเมลหรือเบอร์โทรศัพท์
-            </p>
-          </div>
-
-          <Card className="p-8 shadow-lg">
-            <div className="space-y-6">
-              <div className="flex gap-4 justify-center mb-6">
-                <Button
-                  type="button"
-                  variant={searchType === "email" ? "default" : "outline"}
-                  onClick={() => setSearchType("email")}
-                  className="flex items-center gap-2"
-                >
-                  <Mail className="w-4 h-4" />
-                  อีเมล
-                </Button>
-                <Button
-                  type="button"
-                  variant={searchType === "phone" ? "default" : "outline"}
-                  onClick={() => setSearchType("phone")}
-                  className="flex items-center gap-2"
-                >
-                  <Phone className="w-4 h-4" />
-                  เบอร์โทร
-                </Button>
-              </div>
-
-              <div>
-                <Label htmlFor="search">
-                  {searchType === "email" ? "อีเมล" : "เบอร์โทรศัพท์"}
-                </Label>
-                <Input
-                  id="search"
-                  type={searchType === "email" ? "email" : "tel"}
-                  placeholder={
-                    searchType === "email"
-                      ? "example@email.com"
-                      : "0812345678"
-                  }
-                  value={searchValue}
-                  onChange={(e) => setSearchValue(e.target.value)}
-                  onKeyPress={(e) => e.key === "Enter" && handleSearch()}
-                  className="mt-1"
-                />
-              </div>
-
-              <Button
-                onClick={handleSearch}
-                disabled={loading}
-                className="w-full"
-                size="lg"
-              >
-                <Search className="w-5 h-5 mr-2" />
-                {loading ? "กำลังค้นหา..." : "ค้นหาใบสมัคร"}
-              </Button>
-            </div>
-          </Card>
-
-          {application && statusInfo && (
+          <div className="text-center mb-16">
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.2 }}
-              className="mt-8"
+              transition={{ delay: 0.1, duration: 0.6 }}
+              className="inline-block mb-6 px-6 py-2 bg-gradient-to-r from-gray-50 to-gray-100 rounded-full border border-gray-200/60 shadow-sm"
             >
-              <Card className={`p-8 shadow-lg border-2 ${statusInfo.color}`}>
-                <div className="text-center mb-6">
-                  <div className="flex justify-center mb-4">
-                    {statusInfo.icon}
-                  </div>
-                  <h2 className="text-2xl font-bold mb-2">
-                    {statusInfo.text}
-                  </h2>
-                  <p className="text-muted-foreground">
-                    {statusInfo.description}
-                  </p>
-                </div>
+              <span className="text-gray-700 font-semibold text-sm tracking-wider">APPLICATION STATUS</span>
+            </motion.div>
+            <motion.h1 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2, duration: 0.6 }}
+              className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-700 bg-clip-text text-transparent"
+            >
+              ติดตามสถานะใบสมัคร
+            </motion.h1>
+            <motion.p 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3, duration: 0.6 }}
+              className="text-xl text-gray-600 leading-relaxed"
+            >
+              ค้นหาใบสมัครของคุณด้วยอีเมลหรือเบอร์โทรศัพท์
+            </motion.p>
+          </div>
 
-                <div className="border-t pt-6 space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">ชื่อ-นามสกุล:</span>
-                    <span className="font-medium">{application.full_name}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">ตำแหน่ง:</span>
-                    <span className="font-medium">
-                      {position?.title || "ไม่ระบุ"}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">มหาวิทยาลัย:</span>
-                    <span className="font-medium">{application.university || "ไม่ระบุ"}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">คณะ:</span>
-                    <span className="font-medium">{application.faculty}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">สาขา:</span>
-                    <span className="font-medium">{application.major}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">วันที่สมัคร:</span>
-                    <span className="font-medium">
-                      {new Date(application.created_at).toLocaleDateString(
-                        "th-TH",
-                        {
-                          year: "numeric",
-                          month: "long",
-                          day: "numeric",
-                        }
-                      )}
-                    </span>
-                  </div>
-                </div>
-
-                {application.cv_file_path && (
-                  <div className="mt-6 pt-6 border-t">
-                    <Button
-                      onClick={() => handleDownloadCV(application.cv_file_path!)}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      ดาวน์โหลด/ดูไฟล์ CV
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4, duration: 0.6 }}>
+            <Card className="p-8 mb-8 backdrop-blur-xl bg-white/80 border-gray-200/60 shadow-[0_8px_30px_rgb(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-all duration-500">
+              <div className="space-y-6">
+                <div className="flex gap-3 mb-6">
+                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button onClick={() => setSearchType("email")} variant={searchType === "email" ? "default" : "outline"} className="w-full h-12 font-medium transition-all duration-300">
+                      <Mail className="w-4 h-4 mr-2" />ค้นหาด้วยอีเมล
                     </Button>
-                  </div>
-                )}
+                  </motion.div>
+                  <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
+                    <Button onClick={() => setSearchType("phone")} variant={searchType === "phone" ? "default" : "outline"} className="w-full h-12 font-medium transition-all duration-300">
+                      <Phone className="w-4 h-4 mr-2" />ค้นหาด้วยเบอร์โทร
+                    </Button>
+                  </motion.div>
+                </div>
+
+                <div>
+                  <Label htmlFor="search" className="text-sm font-medium text-gray-700">{searchType === "email" ? "อีเมล" : "เบอร์โทรศัพท์"}</Label>
+                  <Input id="search" type={searchType === "email" ? "email" : "tel"} placeholder={searchType === "email" ? "example@email.com" : "0812345678"} value={searchValue} onChange={(e) => setSearchValue(e.target.value)} className="mt-2 h-12 border-gray-200 focus:border-gray-300 transition-all duration-300" />
+                </div>
+
+                <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                  <Button onClick={handleSearch} disabled={loading || !searchValue} className="w-full h-12 font-medium shadow-md hover:shadow-lg transition-all duration-300">
+                    {loading ? <><Search className="w-4 h-4 mr-2 animate-spin" />กำลังค้นหา...</> : <><Search className="w-4 h-4 mr-2" />ค้นหา</>}
+                  </Button>
+                </motion.div>
+              </div>
+            </Card>
+          </motion.div>
+
+          {application && statusInfo && (
+            <motion.div initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} transition={{ delay: 0.2, duration: 0.7, ease: [0.16, 1, 0.3, 1] }}>
+              <Card className="p-8 backdrop-blur-xl bg-white/90 border-gray-200/60 shadow-[0_20px_60px_rgb(0,0,0,0.08)] overflow-hidden">
+                <div className="space-y-8">
+                  <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.3, duration: 0.6 }} className={`relative p-8 rounded-3xl border-2 ${statusInfo.color} backdrop-blur-sm transition-all duration-500 overflow-hidden group`}>
+                    <div className="absolute inset-0 bg-gradient-to-br from-white/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                    <div className="relative flex items-center gap-6">
+                      <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.5, type: "spring", stiffness: 200, damping: 15 }}>{statusInfo.icon}</motion.div>
+                      <div className="flex-1">
+                        <motion.h3 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }} className="text-2xl font-bold mb-2">{statusInfo.text}</motion.h3>
+                        <motion.p initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.7 }} className="text-gray-600 leading-relaxed">{statusInfo.description}</motion.p>
+                      </div>
+                    </div>
+                  </motion.div>
+
+                  <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.8 }} className="grid md:grid-cols-2 gap-4">
+                    {[
+                      { label: "ชื่อ-นามสกุล", value: application.full_name },
+                      { label: "ตำแหน่งที่สมัคร", value: position?.title || "N/A" },
+                      { label: "มหาวิทยาลัย", value: application.university || "N/A" },
+                      { label: "คณะ", value: application.faculty },
+                      { label: "สาขา", value: application.major },
+                      { label: "วันที่สมัคร", value: new Date(application.created_at).toLocaleDateString("th-TH", { year: "numeric", month: "long", day: "numeric" }) },
+                    ].map((item, index) => (
+                      <motion.div key={item.label} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.9 + index * 0.05 }} whileHover={{ scale: 1.02, transition: { duration: 0.2 } }} className="p-5 bg-gradient-to-br from-gray-50 to-gray-50/50 rounded-2xl border border-gray-100 hover:border-gray-200 hover:shadow-md transition-all duration-300">
+                        <p className="text-xs font-medium text-gray-500 mb-2 uppercase tracking-wider">{item.label}</p>
+                        <p className="font-semibold text-gray-900 text-lg">{item.value}</p>
+                      </motion.div>
+                    ))}
+                  </motion.div>
+
+                  {application.cv_file_path && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.2 }} whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.99 }}>
+                      <Button onClick={handleDownloadCV} variant="outline" className="w-full h-14 text-base font-medium border-2 hover:border-gray-300 hover:bg-gray-50 transition-all duration-300 shadow-sm hover:shadow-md">
+                        <Download className="w-5 h-5 mr-2" />ดาวน์โหลด CV
+                      </Button>
+                    </motion.div>
+                  )}
+                </div>
               </Card>
             </motion.div>
           )}
         </motion.div>
-      </main>
-
+      </div>
       <Footer />
     </div>
   );
