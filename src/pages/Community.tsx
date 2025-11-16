@@ -1,31 +1,51 @@
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { Target, Lightbulb, Users } from "lucide-react";
+import { Target, Lightbulb, Users, ArrowLeft } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
 
 const Community = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
 
-      {/* Organization Structure Section */}
-      <section className="py-24 px-4 mt-20">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
+      {/* Header */}
+      <div className="bg-midnight-blue py-20 pt-32">
+        <div className="container mx-auto px-4">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/")}
+            className="mb-8 text-white hover:text-spu-pink"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-spu-pink to-midnight-blue bg-clip-text text-transparent">
-              โครงสร้างองค์กร SPU AI CLUB
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Home
+          </Button>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
+            <h1 className="text-5xl md:text-7xl font-bold mb-6 text-white">
+              โครงสร้าง{" "}
+              <span className="text-spu-pink">
+                องค์กร
+              </span>
+            </h1>
+            <p className="text-xl text-white/80 max-w-3xl">
               ระบบการทำงาน 3 สายงานหลัก ภายใต้การนำของประธานชมรม
             </p>
           </motion.div>
+        </div>
+      </div>
+
+      {/* Organization Structure Section */}
+      <section className="py-16 px-4">
+        <div className="max-w-7xl mx-auto">
 
           {/* President */}
           <motion.div
