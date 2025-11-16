@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Search, Mail, Phone, CheckCircle, Clock, XCircle, FileText } from "lucide-react";
+import { Search, Mail, Phone, CheckCircle, Clock, XCircle, FileText, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,7 @@ interface Application {
   university: string;
   faculty: string;
   major: string;
+  cv_file_path: string | null;
 }
 
 interface Position {
@@ -111,6 +112,23 @@ const TrackApplication = () => {
           description: "ไม่สามารถระบุสถานะได้",
           color: "border-gray-500 bg-gray-50"
         };
+    }
+  };
+
+  const handleDownloadCV = async (cvPath: string) => {
+    try {
+      const { data, error } = await supabase.storage
+        .from("cvs")
+        .createSignedUrl(cvPath, 3600); // URL valid for 1 hour
+
+      if (error) throw error;
+
+      if (data?.signedUrl) {
+        window.open(data.signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error downloading CV:", error);
+      toast.error("ไม่สามารถเปิดไฟล์ CV ได้");
     }
   };
 
@@ -286,6 +304,19 @@ const TrackApplication = () => {
                     </span>
                   </div>
                 </div>
+
+                {application.cv_file_path && (
+                  <div className="mt-6 pt-6 border-t">
+                    <Button
+                      onClick={() => handleDownloadCV(application.cv_file_path!)}
+                      className="w-full"
+                      variant="outline"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      ดาวน์โหลด/ดูไฟล์ CV
+                    </Button>
+                  </div>
+                )}
               </Card>
             </motion.div>
           )}
