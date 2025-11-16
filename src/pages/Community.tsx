@@ -1,8 +1,6 @@
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import { Footer } from "@/components/Footer";
-import { CommunityHero } from "@/components/CommunityHero";
-import { Showcase } from "@/components/Showcase";
 import { Target, Lightbulb, Users } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
@@ -10,11 +8,9 @@ const Community = () => {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      
-      <CommunityHero />
 
       {/* Organization Structure Section */}
-      <section className="py-24 px-4">
+      <section className="py-24 px-4 mt-20">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 60 }}
