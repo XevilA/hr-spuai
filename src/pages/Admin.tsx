@@ -9,6 +9,7 @@ import { UserRolesManager } from "@/components/admin/UserRolesManager";
 import { ProjectsManager } from "@/components/admin/ProjectsManager";
 import { PositionsManager } from "@/components/admin/PositionsManager";
 import { Dashboard } from "@/components/admin/Dashboard";
+import { EmailTemplatesManager } from "@/components/admin/EmailTemplatesManager";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -102,6 +103,7 @@ const Admin = () => {
               <TabsTrigger value="applications">Applications</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="positions">Positions</TabsTrigger>
+              <TabsTrigger value="emails">Email Templates</TabsTrigger>
               {userRole === "super_admin" && (
                 <TabsTrigger value="users">User Management</TabsTrigger>
               )}
@@ -121,6 +123,10 @@ const Admin = () => {
 
             <TabsContent value="positions">
               <PositionsManager />
+            </TabsContent>
+
+            <TabsContent value="emails">
+              <EmailTemplatesManager />
             </TabsContent>
 
             {userRole === "super_admin" && (
