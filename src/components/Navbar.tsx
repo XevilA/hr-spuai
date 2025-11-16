@@ -21,7 +21,7 @@ const Navbar = () => {
     { name: "ตำแหน่ง", path: "/positions" },
     { name: "โครงการ", path: "/projects" },
     { name: "โครงสร้าง", path: "/community" },
-    { name: "ทีมงาน", path: "/team" },
+    { name: "ฝ่ายบริหาร", path: "/team" },
     { name: "ติดต่อ", path: "/contact" },
     { name: "ติดตามสถานะ", path: "/track" },
   ];
