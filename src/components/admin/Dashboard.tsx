@@ -19,7 +19,7 @@ type Stats = {
   total: number;
   pending: number;
   reviewing: number;
-  approved: number;
+  accepted: number;
   rejected: number;
 };
 
@@ -38,7 +38,7 @@ export const Dashboard = () => {
     total: 0,
     pending: 0,
     reviewing: 0,
-    approved: 0,
+    accepted: 0,
     rejected: 0,
   });
   const [positionStats, setPositionStats] = useState<PositionStat[]>([]);
@@ -68,7 +68,7 @@ export const Dashboard = () => {
         total: applications?.length || 0,
         pending: applications?.filter((app) => app.status === "pending").length || 0,
         reviewing: applications?.filter((app) => app.status === "reviewing").length || 0,
-        approved: applications?.filter((app) => app.status === "approved").length || 0,
+        accepted: applications?.filter((app) => app.status === "accepted").length || 0,
         rejected: applications?.filter((app) => app.status === "rejected").length || 0,
       };
 
@@ -134,40 +134,40 @@ export const Dashboard = () => {
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-            <Clock className="h-4 w-4 text-yellow-600" />
+            <Clock className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-yellow-600">{stats.pending}</div>
+            <div className="text-2xl font-bold text-yellow-500">{stats.pending}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Reviewing</CardTitle>
-            <FileText className="h-4 w-4 text-blue-600" />
+            <FileText className="h-4 w-4 text-blue-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{stats.reviewing}</div>
+            <div className="text-2xl font-bold text-blue-500">{stats.reviewing}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
-            <CheckCircle className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium">Accepted</CardTitle>
+            <CheckCircle className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{stats.approved}</div>
+            <div className="text-2xl font-bold text-green-500">{stats.accepted}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className="text-sm font-medium">Rejected</CardTitle>
-            <XCircle className="h-4 w-4 text-red-600" />
+            <XCircle className="h-4 w-4 text-red-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-red-600">{stats.rejected}</div>
+            <div className="text-2xl font-bold text-red-500">{stats.rejected}</div>
           </CardContent>
         </Card>
       </div>
