@@ -13,7 +13,7 @@ const Community = () => {
       
       <CommunityHero />
 
-      {/* Vision & Mission Section */}
+      {/* Organization Structure Section */}
       <section className="py-24 px-4">
         <div className="max-w-7xl mx-auto">
           <motion.div
@@ -24,212 +24,191 @@ const Community = () => {
             className="text-center mb-16"
           >
             <h2 className="text-4xl md:text-5xl font-bold mb-6 bg-gradient-to-r from-spu-pink to-midnight-blue bg-clip-text text-transparent">
-              ปณิธาน SPU AI CLUB
+              โครงสร้างองค์กร SPU AI CLUB
             </h2>
             <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              สร้างชุมชนแห่งการเรียนรู้และพัฒนาทักษะ AI เพื่ออนาคตที่ดีกว่า
+              ระบบการทำงาน 3 สายงานหลัก ภายใต้การนำของประธานชมรม
             </p>
           </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
+          {/* President */}
+          <motion.div
+            initial={{ opacity: 0, y: 60 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8 }}
+            viewport={{ once: true }}
+            className="mb-16"
+          >
+            <Card className="border-2 border-spu-pink hover:shadow-2xl transition-all duration-300">
+              <CardContent className="p-10">
+                <div className="flex flex-col items-center text-center">
+                  <div className="w-24 h-24 rounded-full bg-gradient-to-br from-spu-pink via-spu-pink-light to-midnight-blue flex items-center justify-center mb-6">
+                    <Target className="w-12 h-12 text-white" />
+                  </div>
+                  <h3 className="text-3xl font-bold mb-4">ประธาน (President)</h3>
+                  <p className="text-lg text-muted-foreground max-w-2xl leading-relaxed">
+                    ศูนย์กลางของชมรม ผู้กำหนดทิศทาง กลยุทธ์ และภาพรวมทั้งหมด หน้าที่คือวางวิสัยทัศน์ ดูภาพรวมของทั้ง 3 สายงาน และตัดสินใจเชิงกลยุทธ์ว่าชมรมจะเดินไปทางไหน คล้าย CEO ในบริษัทสตาร์ทอัพ แต่โทนสนุกกว่าและคล่องตัวกว่า
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Three VP Sections */}
+          <div className="space-y-12">
+            {/* VP Creator */}
             <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.8 }}
               viewport={{ once: true }}
             >
-              <Card className="h-full border-2 hover:border-spu-pink transition-colors duration-300">
+              <Card className="border-2 hover:border-spu-pink transition-all duration-300">
                 <CardContent className="p-8">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-spu-pink to-spu-pink-light flex items-center justify-center mb-6">
-                    <Target className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">วิสัยทัศน์</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    เป็นชมรม AI ชั้นนำที่สร้างสรรค์นวัตกรรมและพัฒนาบุคลากรด้าน AI ที่มีคุณภาพสู่สังคมไทย
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full border-2 hover:border-spu-pink transition-colors duration-300">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-midnight-blue to-midnight-blue-light flex items-center justify-center mb-6">
-                    <Lightbulb className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">พันธกิจ</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    จัดกิจกรรมเพื่อส่งเสริมการเรียนรู้ แลกเปลี่ยนความรู้ และพัฒนาโครงการ AI ที่สร้างคุณค่าต่อสังคม
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, y: 60 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
-              viewport={{ once: true }}
-            >
-              <Card className="h-full border-2 hover:border-spu-pink transition-colors duration-300">
-                <CardContent className="p-8">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-spu-pink via-midnight-blue to-midnight-blue-light flex items-center justify-center mb-6">
-                    <Users className="w-8 h-8 text-white" />
-                  </div>
-                  <h3 className="text-2xl font-bold mb-4">ค่านิยม</h3>
-                  <p className="text-muted-foreground leading-relaxed">
-                    การเรียนรู้ร่วมกัน สร้างสรรค์นวัตกรรม และแบ่งปันความรู้เพื่อพัฒนาสังคม
-                  </p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Showcase Section */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">ผลงานของเรา</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              โครงการและผลงาน AI ที่ทีมของเราได้พัฒนาขึ้น
-            </p>
-          </motion.div>
-          <Showcase />
-        </div>
-      </section>
-
-      {/* Planning Section */}
-      <section className="py-24 px-4">
-        <div className="max-w-7xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 60 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">แผนการดำเนินงาน</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              กิจกรรมและโครงการที่เราวางแผนไว้สำหรับอนาคต
-            </p>
-          </motion.div>
-
-          <div className="space-y-8 max-w-4xl mx-auto">
-            {[
-              {
-                quarter: "Q1 2025",
-                title: "Workshop Series",
-                description: "จัด Workshop AI พื้นฐานและขั้นสูงสำหรับสมาชิกทุกระดับ",
-                color: "from-spu-pink to-spu-pink-light"
-              },
-              {
-                quarter: "Q2 2025",
-                title: "AI Hackathon",
-                description: "การแข่งขันพัฒนา AI Solution เพื่อแก้ปัญหาในชีวิตประจำวัน",
-                color: "from-midnight-blue to-midnight-blue-light"
-              },
-              {
-                quarter: "Q3 2025",
-                title: "Community Projects",
-                description: "พัฒนาโครงการ AI เพื่อสังคมและสิ่งแวดล้อม",
-                color: "from-spu-pink via-midnight-blue to-midnight-blue-light"
-              },
-              {
-                quarter: "Q4 2025",
-                title: "Annual Conference",
-                description: "จัดงานประชุมใหญ่ประจำปี แสดงผลงานและแลกเปลี่ยนความรู้",
-                color: "from-spu-pink-light to-spu-pink"
-              }
-            ].map((plan, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 60 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="border-2 hover:border-spu-pink transition-all duration-300 hover:shadow-lg">
-                  <CardContent className="p-8">
-                    <div className="flex items-start gap-6">
-                      <div className={`w-20 h-20 rounded-2xl bg-gradient-to-br ${plan.color} flex items-center justify-center flex-shrink-0`}>
-                        <span className="text-white font-bold text-sm text-center">
-                          {plan.quarter}
-                        </span>
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="text-2xl font-bold mb-3">{plan.title}</h3>
-                        <p className="text-muted-foreground leading-relaxed">
-                          {plan.description}
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-spu-pink to-spu-pink-light flex items-center justify-center flex-shrink-0">
+                      <Lightbulb className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold mb-2">รองประธานฝั่ง Creator (VP – Creator)</h3>
+                      <p className="text-muted-foreground mb-4 leading-relaxed">
+                        ดูแลงานสื่อ งานภาพลักษณ์ งานคอนเทนต์ทั้งหมด เป็นเสาหลักด้าน "ภาพลักษณ์และการสื่อสาร" ของชมรม
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="font-semibold mb-2 text-spu-pink">ทีม Head of CC (Content & Creative)</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          <span>• Content Creative</span>
+                          <span>• Editor</span>
+                          <span>• PR & Public Relations</span>
+                          <span>• Project Coordinator</span>
+                          <span>• Admin</span>
+                          <span>• Pitching</span>
+                          <span>• Graphic Design</span>
+                          <span>• Ads Agency</span>
+                          <span>• Copywriter</span>
+                          <span>• Web Comic</span>
+                          <span>• Influencer Team</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-3 italic">
+                          สายนี้เปรียบเหมือนฝ่ายการตลาด + ครีเอทีฟของบริษัท
                         </p>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
-      {/* Organization Structure */}
-      <section className="py-24 px-4 bg-muted/30">
-        <div className="max-w-7xl mx-auto">
+            {/* VP General Management */}
+            <motion.div
+              initial={{ opacity: 0, x: 60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border-2 hover:border-midnight-blue transition-all duration-300">
+                <CardContent className="p-8">
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-midnight-blue to-midnight-blue-light flex items-center justify-center flex-shrink-0">
+                      <Users className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold mb-2">รองประธานฝ่ายบริหารทั่วไป (VP – General Management)</h3>
+                      <p className="text-muted-foreground mb-4 leading-relaxed">
+                        เป็น "หัวใจการจัดการและระบบหลังบ้าน" ของชมรม ควบคุมฝ่าย Admin ทั้งหมด, ระบบสมาชิก, งานเอกสาร และงานประสานงานกับมหาวิทยาลัย
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="font-semibold mb-2 text-midnight-blue">ทีม Head From 6 Faculties / 3 วิทยาเขต</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          <span>• Accounting</span>
+                          <span>• ตัวแทน 6 คณะ</span>
+                          <span>• ฝ่ายจัดการ Event</span>
+                          <span>• ฝ่ายกลยุทธ์</span>
+                          <span>• ฝ่ายพัฒนาทักษะสมาชิก</span>
+                          <span>• ฝ่ายบริหารงาน</span>
+                          <span>• ฝ่ายบริหารทรัพยากรบุคคล (HR)</span>
+                          <span>• Account Executive (AE)</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-3 italic">
+                          สายนี้ทำหน้าที่เหมือน "COO + HR + Operation" ในบริษัท
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* VP Developer */}
+            <motion.div
+              initial={{ opacity: 0, x: -60 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8 }}
+              viewport={{ once: true }}
+            >
+              <Card className="border-2 hover:border-spu-pink transition-all duration-300">
+                <CardContent className="p-8">
+                  <div className="flex items-start gap-6">
+                    <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-spu-pink via-midnight-blue to-midnight-blue-light flex items-center justify-center flex-shrink-0">
+                      <Users className="w-10 h-10 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-2xl font-bold mb-2">รองประธานสาย Developer (VP – Developer)</h3>
+                      <p className="text-muted-foreground mb-4 leading-relaxed">
+                        รับผิดชอบทุกอย่างที่เป็นโค้ด ระบบ นวัตกรรม และโปรเจกต์เทคโนโลยีของชมรม
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4">
+                        <p className="font-semibold mb-2 text-spu-pink">ทีม Head of Developer</p>
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-2 text-sm">
+                          <span>• Sale & Marketing</span>
+                          <span>• Planning</span>
+                          <span>• Developer</span>
+                          <span>• Account Executive (AE)</span>
+                          <span>• Project Coordinator</span>
+                          <span>• Research & Innovation</span>
+                          <span>• UX/UI Designer</span>
+                          <span>• Data Analyst</span>
+                          <span>• AI Automation</span>
+                          <span>• IoT</span>
+                          <span>• Hackathon Team</span>
+                          <span>• WebApp / Desktop App</span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-3 italic">
+                          สายนี้คือ "Tech Department + R&D Lab" ของชมรม
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          {/* System Overview */}
           <motion.div
             initial={{ opacity: 0, y: 60 }}
             whileInView={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            viewport={{ once: true, margin: "-100px" }}
-            className="text-center mb-16"
+            viewport={{ once: true }}
+            className="mt-16"
           >
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">โครงสร้างชมรม</h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-              ทีมงานและบทบาทในการขับเคลื่อนชมรม
-            </p>
+            <Card className="border-2 border-midnight-blue">
+              <CardContent className="p-8">
+                <h3 className="text-2xl font-bold mb-4 text-center">ภาพรวมระบบการทำงาน</h3>
+                <p className="text-muted-foreground leading-relaxed mb-4">
+                  สามสายนี้ทำงานร่วมกัน โดยประธานจะเป็นคนเชื่อมทุกอย่างเข้าเป็นระบบเดียว
+                </p>
+                <div className="space-y-2 text-muted-foreground">
+                  <p>• <span className="text-spu-pink font-semibold">สาย Creator</span> → ทำสื่อให้โปรเจกต์และกิจกรรม</p>
+                  <p>• <span className="text-midnight-blue font-semibold">สายบริหาร</span> → จัดระบบสมาชิก ประสานงานมหาลัย และดูแลการจัดการ</p>
+                  <p>• <span className="text-spu-pink font-semibold">สาย Developer</span> → ผลิตระบบจริงให้คณะ หน่วยงาน หรือโปรเจกต์ของชมรม</p>
+                </div>
+              </CardContent>
+            </Card>
           </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { role: "ประธานชมรม", dept: "ผู้นำและกำหนดทิศทาง" },
-              { role: "รองประธาน", dept: "สนับสนุนและประสานงาน" },
-              { role: "เลขานุการ", dept: "บริหารจัดการเอกสาร" },
-              { role: "เหรัญญิก", dept: "จัดการงบประมาณ" },
-              { role: "ฝ่ายเทคนิค", dept: "พัฒนาโครงการ AI" },
-              { role: "ฝ่ายประชาสัมพันธ์", dept: "สื่อสารและประชาสัมพันธ์" },
-            ].map((position, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 60 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.8, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full border-2 hover:border-spu-pink transition-all duration-300 hover:shadow-lg group">
-                  <CardContent className="p-8 text-center">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-spu-pink to-midnight-blue mx-auto mb-6 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                      <Users className="w-10 h-10 text-white" />
-                    </div>
-                    <h3 className="text-xl font-bold mb-2">{position.role}</h3>
-                    <p className="text-muted-foreground">{position.dept}</p>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
         </div>
       </section>
+
 
       <Footer />
     </div>
