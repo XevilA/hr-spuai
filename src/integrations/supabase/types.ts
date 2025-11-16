@@ -97,6 +97,98 @@ export type Database = {
           },
         ]
       }
+      email_logs: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          queue_id: string | null
+          recipient_email: string
+          retry_attempt: number
+          sent_at: string
+          status: string
+          subject: string
+          template_name: string
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          queue_id?: string | null
+          recipient_email: string
+          retry_attempt?: number
+          sent_at?: string
+          status: string
+          subject: string
+          template_name: string
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          queue_id?: string | null
+          recipient_email?: string
+          retry_attempt?: number
+          sent_at?: string
+          status?: string
+          subject?: string
+          template_name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "email_logs_queue_id_fkey"
+            columns: ["queue_id"]
+            isOneToOne: false
+            referencedRelation: "email_queue"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      email_queue: {
+        Row: {
+          created_at: string
+          error_message: string | null
+          id: string
+          last_attempt_at: string | null
+          max_retries: number
+          recipient_email: string
+          retry_count: number
+          scheduled_at: string
+          status: string
+          template_name: string
+          updated_at: string
+          variables: Json
+        }
+        Insert: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          recipient_email: string
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          template_name: string
+          updated_at?: string
+          variables?: Json
+        }
+        Update: {
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          last_attempt_at?: string | null
+          max_retries?: number
+          recipient_email?: string
+          retry_count?: number
+          scheduled_at?: string
+          status?: string
+          template_name?: string
+          updated_at?: string
+          variables?: Json
+        }
+        Relationships: []
+      }
       positions: {
         Row: {
           created_at: string | null
@@ -197,6 +289,7 @@ export type Database = {
         Returns: boolean
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      retry_failed_emails: { Args: never; Returns: undefined }
     }
     Enums: {
       app_role: "super_admin" | "vice_president" | "admin"
