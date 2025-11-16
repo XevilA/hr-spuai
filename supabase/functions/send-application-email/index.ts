@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,12 +60,19 @@ function getEmailTemplate(fullName: string, status: string) {
                     <span style="color: #8B5CF6; word-break: break-all;">https://urcywqpdbyrduzfzvvne.lovableproject.com/track?token={{TRACKING_TOKEN}}</span>
                   </p>
                 </div>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 25px;">
-                  💡 <strong>คำแนะนำ:</strong> หากมีคำถามหรือต้องการข้อมูลเพิ่มเติม สามารถสอบถามได้ผ่านทาง AI Chatbot "น้องกรีน" บนเว็บไซต์ของเราตลอด 24 ชั่วโมง
+                <div class="divider"></div>
+                <div class="message">
+                  <p><strong>📋 ขั้นตอนต่อไป:</strong></p>
+                  <p>1. ทีมงานจะทำการตรวจสอบใบสมัครและเอกสารของคุณ</p>
+                  <p>2. หากผ่านการคัดเลือกเบื้องต้น เราจะติดต่อกลับเพื่อนัดหมายสัมภาษณ์</p>
+                  <p>3. คุณสามารถติดตามสถานะได้ตลอดเวลาผ่านลิงก์ด้านบน</p>
+                </div>
+                <p style="color: #6b7280; font-size: 15px; text-align: center; margin: 25px 0;">
+                  หากมีคำถามเพิ่มเติม สามารถติดต่อเราได้ที่อีเมลหรือเบอร์โทรด้านล่าง
                 </p>
                 <div class="divider"></div>
                 <p style="color: #374151; margin: 0;">ด้วยความเคารพ</p>
-                <p style="color: #8B5CF6; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
+                <p style="color: #6B7280; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
               </div>
               <div class="footer">
                 <strong>SPU AI CLUB</strong>
@@ -76,8 +84,8 @@ function getEmailTemplate(fullName: string, status: string) {
         </html>
       `
     },
-    review: {
-      subject: "ผ่านการสัมภาษณ์เรียบร้อยแล้ว - SPU AI CLUB",
+    reviewing: {
+      subject: "อัพเดทสถานะ: กำลังพิจารณาใบสมัครของคุณ - SPU AI CLUB",
       html: `
         <!DOCTYPE html>
         <html>
@@ -86,7 +94,7 @@ function getEmailTemplate(fullName: string, status: string) {
             <style>
               body { font-family: 'Noto Sans Thai', Arial, sans-serif; line-height: 1.8; margin: 0; padding: 0; background-color: #f5f5f5; }
               .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-              .header { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); padding: 40px 30px; text-align: center; }
+              .header { background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%); padding: 40px 30px; text-align: center; }
               .header h1 { color: white; margin: 0; font-size: 28px; font-weight: bold; }
               .header p { color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px; }
               .content { padding: 40px 30px; }
@@ -94,7 +102,7 @@ function getEmailTemplate(fullName: string, status: string) {
               .message { background: #f3f4f6; padding: 25px; border-radius: 12px; border-left: 4px solid #3B82F6; margin: 25px 0; }
               .message p { margin: 0 0 15px 0; color: #374151; font-size: 15px; }
               .message p:last-child { margin-bottom: 0; }
-              .highlight { background: linear-gradient(135deg, #3B82F6 0%, #1D4ED8 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; }
+              .highlight { background: linear-gradient(135deg, #3B82F6 0%, #1E40AF 100%); color: white; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; }
               .highlight-text { font-size: 18px; font-weight: 600; margin: 0; }
               .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
               .footer strong { color: #374151; display: block; margin-bottom: 10px; font-size: 16px; }
@@ -104,25 +112,26 @@ function getEmailTemplate(fullName: string, status: string) {
           <body>
             <div class="container">
               <div class="header">
-                <h1>📝 SPU AI CLUB</h1>
-                <p>Interview Completed</p>
+                <h1>📋 SPU AI CLUB</h1>
+                <p>Application Update</p>
               </div>
               <div class="content">
                 <p class="greeting">สวัสดีค่ะ คุณ${fullName}</p>
-                <div class="message">
-                  <p><strong>✅ ท่านได้ผ่านการสัมภาษณ์เรียบร้อยแล้ว!</strong></p>
-                  <p>ขอบคุณที่สละเวลามาร่วมสัมภาษณ์กับทีมงาน SPU AI CLUB ทีมงานประทับใจในศักยภาพและความตั้งใจของคุณเป็นอย่างมาก</p>
-                </div>
                 <div class="highlight">
-                  <p class="highlight-text">⏱️ รอประกาศผลการพิจารณา</p>
-                  <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.95;">กรุณารอประมาณ 1-2 วัน</p>
+                  <p class="highlight-text">🔍 กำลังพิจารณาใบสมัครของคุณ</p>
+                  <p style="margin: 10px 0 0 0; font-size: 14px; opacity: 0.95;">อยู่ระหว่างการประเมินโดยทีมงาน</p>
                 </div>
-                <p style="color: #6b7280; font-size: 14px; margin-top: 25px;">
-                  💡 <strong>หมายเหตุ:</strong> ทีมงานกำลังพิจารณาผลการสัมภาษณ์อย่างละเอียดเพื่อให้ได้สมาชิกที่เหมาะสมที่สุด เราจะแจ้งผลให้ทราบโดยเร็วที่สุด
+                <div class="message">
+                  <p>ใบสมัครของคุณผ่านการตรวจสอบเบื้องต้นแล้ว และตอนนี้อยู่ในขั้นตอนการพิจารณาอย่างละเอียดโดยทีมงานของเรา</p>
+                  <p><strong>⏰ โปรดรอการติดต่อกลับภายใน 2-3 วันทำการ</strong></p>
+                  <p>เราจะแจ้งผลการพิจารณาให้คุณทราบผ่านทางอีเมลนี้</p>
+                </div>
+                <p style="color: #6b7280; font-size: 15px; text-align: center; margin: 25px 0;">
+                  ขอบคุณสำหรับความสนใจและความอดทนรอคอย
                 </p>
                 <div class="divider"></div>
                 <p style="color: #374151; margin: 0;">ด้วยความเคารพ</p>
-                <p style="color: #3B82F6; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
+                <p style="color: #6B7280; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
               </div>
               <div class="footer">
                 <strong>SPU AI CLUB</strong>
@@ -134,8 +143,8 @@ function getEmailTemplate(fullName: string, status: string) {
         </html>
       `
     },
-    approved: {
-      subject: "🎉 ยินดีด้วย! คุณผ่านการสัมภาษณ์ - SPU AI CLUB",
+    accepted: {
+      subject: "🎉 ยินดีด้วย! คุณผ่านการคัดเลือก - SPU AI CLUB",
       html: `
         <!DOCTYPE html>
         <html>
@@ -152,48 +161,43 @@ function getEmailTemplate(fullName: string, status: string) {
               .message { background: #f3f4f6; padding: 25px; border-radius: 12px; border-left: 4px solid #10B981; margin: 25px 0; }
               .message p { margin: 0 0 15px 0; color: #374151; font-size: 15px; }
               .message p:last-child { margin-bottom: 0; }
-              .highlight { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; margin: 25px 0; }
-              .highlight-text { font-size: 22px; font-weight: 700; margin: 0; }
-              .congrats { font-size: 48px; margin-bottom: 10px; }
+              .celebration { background: linear-gradient(135deg, #10B981 0%, #059669 100%); color: white; padding: 30px; border-radius: 12px; text-align: center; margin: 25px 0; }
+              .celebration-emoji { font-size: 48px; margin-bottom: 15px; }
+              .celebration-text { font-size: 24px; font-weight: bold; margin: 15px 0; }
               .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
               .footer strong { color: #374151; display: block; margin-bottom: 10px; font-size: 16px; }
               .divider { height: 1px; background: #e5e7eb; margin: 25px 0; }
-              .next-steps { background: #ecfdf5; padding: 20px; border-radius: 12px; margin: 25px 0; }
-              .next-steps h3 { color: #059669; margin: 0 0 15px 0; font-size: 18px; }
-              .next-steps ul { margin: 0; padding-left: 20px; color: #374151; }
-              .next-steps li { margin-bottom: 10px; }
             </style>
           </head>
           <body>
             <div class="container">
               <div class="header">
                 <h1>🎊 SPU AI CLUB</h1>
-                <p>Welcome to the Team!</p>
+                <p>Congratulations!</p>
               </div>
               <div class="content">
                 <p class="greeting">สวัสดีค่ะ คุณ${fullName}</p>
-                <div class="highlight">
-                  <div class="congrats">🎉</div>
-                  <p class="highlight-text">ยินดีด้วย! คุณผ่านการสัมภาษณ์</p>
+                <div class="celebration">
+                  <div class="celebration-emoji">🎉</div>
+                  <p class="celebration-text">ยินดีด้วย!</p>
+                  <p style="margin: 0; font-size: 16px; opacity: 0.95;">คุณผ่านการคัดเลือกเข้าร่วมชมรม SPU AI CLUB</p>
                 </div>
                 <div class="message">
-                  <p><strong>เราขอแสดงความยินดีด้วยอย่างยิ่ง!</strong></p>
-                  <p>คุณได้รับการคัดเลือกให้เป็นส่วนหนึ่งของครอบครัว SPU AI CLUB แล้ว ทีมงานเห็นศักยภาพและความตั้งใจของคุณ และเชื่อมั่นว่าคุณจะเป็นกำลังสำคัญในการพัฒนาชมรมของเราให้เติบโตและแข็งแกร่งยิ่งขึ้น</p>
+                  <p>เราดีใจเป็นอย่างยิ่งที่จะได้ต้อนรับคุณเข้าสู่ครอบครัว SPU AI CLUB!</p>
+                  <p>หลังจากการพิจารณาอย่างรอบคอบ ทีมงานเห็นว่าคุณมีศักยภาพและความตั้งใจที่จะเติบโตไปพร้อมกับเรา</p>
                 </div>
-                <div class="next-steps">
-                  <h3>📋 ขั้นตอนถัดไป:</h3>
-                  <ul>
-                    <li>ทีมงานจะติดต่อกลับไปเพื่อแจ้งรายละเอียดการ Onboarding</li>
-                    <li>เตรียมตัวเข้าร่วมกิจกรรมและโปรเจกต์ของชมรม</li>
-                    <li>พบปะสมาชิกคนอื่นๆ และเริ่มต้นการเรียนรู้ด้าน AI ไปด้วยกัน</li>
-                  </ul>
+                <div class="message">
+                  <p><strong>📅 ขั้นตอนต่อไป:</strong></p>
+                  <p>• ทีมงานจะติดต่อคุณเร็วๆ นี้เพื่อแจ้งรายละเอียดการเข้าร่วมกิจกรรม</p>
+                  <p>• เตรียมตัวพบกับประสบการณ์ที่น่าตื่นเต้นกับโปรเจกต์ AI</p>
+                  <p>• พบกับเพื่อนใหม่ที่มีความสนใจเดียวกัน</p>
                 </div>
-                <p style="color: #059669; font-weight: 600; font-size: 16px; text-align: center; margin: 25px 0;">
-                  ยินดีต้อนรับสู่ SPU AI CLUB! 🚀
+                <p style="color: #6b7280; font-size: 15px; text-align: center; margin: 25px 0;">
+                  ยินดีต้อนรับสู่ SPU AI CLUB! เราหวังว่าจะได้ทำงานร่วมกับคุณเร็วๆ นี้
                 </p>
                 <div class="divider"></div>
                 <p style="color: #374151; margin: 0;">ด้วยความยินดี</p>
-                <p style="color: #10B981; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
+                <p style="color: #6B7280; font-weight: 600; margin: 5px 0 0 0;">ทีมงาน SPU AI CLUB</p>
               </div>
               <div class="footer">
                 <strong>SPU AI CLUB</strong>
@@ -206,7 +210,7 @@ function getEmailTemplate(fullName: string, status: string) {
       `
     },
     rejected: {
-      subject: "ผลการพิจารณาใบสมัคร - SPU AI CLUB",
+      subject: "ขอบคุณสำหรับใบสมัคร - SPU AI CLUB",
       html: `
         <!DOCTYPE html>
         <html>
@@ -215,21 +219,20 @@ function getEmailTemplate(fullName: string, status: string) {
             <style>
               body { font-family: 'Noto Sans Thai', Arial, sans-serif; line-height: 1.8; margin: 0; padding: 0; background-color: #f5f5f5; }
               .container { max-width: 600px; margin: 40px auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
-              .header { background: linear-gradient(135deg, #6B7280 0%, #4B5563 100%); padding: 40px 30px; text-align: center; }
+              .header { background: linear-gradient(135deg, #6366F1 0%, #4F46E5 100%); padding: 40px 30px; text-align: center; }
               .header h1 { color: white; margin: 0; font-size: 28px; font-weight: bold; }
               .header p { color: rgba(255,255,255,0.9); margin: 10px 0 0 0; font-size: 16px; }
               .content { padding: 40px 30px; }
               .greeting { font-size: 20px; color: #1f2937; margin-bottom: 20px; font-weight: 600; }
-              .message { background: #f3f4f6; padding: 25px; border-radius: 12px; border-left: 4px solid #6B7280; margin: 25px 0; }
+              .message { background: #f3f4f6; padding: 25px; border-radius: 12px; border-left: 4px solid #6366F1; margin: 25px 0; }
               .message p { margin: 0 0 15px 0; color: #374151; font-size: 15px; }
               .message p:last-child { margin-bottom: 0; }
-              .highlight { background: #f9fafb; padding: 20px; border-radius: 12px; text-align: center; margin: 25px 0; border: 2px solid #e5e7eb; }
-              .highlight-text { font-size: 18px; font-weight: 600; margin: 0; color: #374151; }
+              .encouragement { background: linear-gradient(135deg, #F59E0B 0%, #D97706 100%); color: white; padding: 25px; border-radius: 12px; margin: 25px 0; }
+              .encouragement p { margin: 0 0 10px 0; }
+              .encouragement p:last-child { margin-bottom: 0; }
               .footer { background: #f9fafb; padding: 30px; text-align: center; color: #6b7280; font-size: 14px; }
               .footer strong { color: #374151; display: block; margin-bottom: 10px; font-size: 16px; }
               .divider { height: 1px; background: #e5e7eb; margin: 25px 0; }
-              .encouragement { background: #eff6ff; padding: 20px; border-radius: 12px; margin: 25px 0; border-left: 4px solid #3B82F6; }
-              .encouragement p { margin: 0; color: #1e40af; font-size: 15px; }
             </style>
           </head>
           <body>
@@ -278,7 +281,7 @@ function getEmailTemplate(fullName: string, status: string) {
 interface EmailRequest {
   to: string;
   fullName: string;
-  status: 'pending' | 'review' | 'approved' | 'rejected';
+  status: 'pending' | 'reviewing' | 'accepted' | 'rejected';
   applicationId?: string;
   cvFilePath?: string;
   position?: string;
@@ -287,19 +290,68 @@ interface EmailRequest {
   trackingToken?: string;
 }
 
+// Helper function to send email via Gmail SMTP
+async function sendGmailEmail(
+  to: string,
+  subject: string,
+  html: string,
+  fromName: string = "SPU AI CLUB"
+) {
+  const GMAIL_USER = Deno.env.get("GMAIL_USER");
+  const GMAIL_APP_PASSWORD = Deno.env.get("GMAIL_APP_PASSWORD");
+
+  if (!GMAIL_USER || !GMAIL_APP_PASSWORD) {
+    throw new Error("Gmail credentials not configured");
+  }
+
+  const client = new SMTPClient({
+    connection: {
+      hostname: "smtp.gmail.com",
+      port: 587,
+      tls: true,
+      auth: {
+        username: GMAIL_USER,
+        password: GMAIL_APP_PASSWORD,
+      },
+    },
+  });
+
+  try {
+    await client.send({
+      from: `${fromName} <${GMAIL_USER}>`,
+      to: to,
+      subject: subject,
+      content: "auto",
+      html: html,
+    });
+    
+    await client.close();
+    console.log(`Email sent successfully to: ${to}`);
+  } catch (error) {
+    await client.close();
+    throw error;
+  }
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { to, fullName, status, applicationId, cvFilePath, position, email, phone, trackingToken }: EmailRequest = await req.json();
-    const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+    const { 
+      to, 
+      fullName, 
+      status, 
+      applicationId, 
+      cvFilePath, 
+      position, 
+      email, 
+      phone, 
+      trackingToken 
+    }: EmailRequest = await req.json();
+    
     const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-
-    if (!RESEND_API_KEY) {
-      throw new Error("RESEND_API_KEY is not configured");
-    }
 
     // Generate email content based on status
     const emailContent = getEmailTemplate(fullName, status);
@@ -310,28 +362,10 @@ const handler = async (req: Request): Promise<Response> => {
       emailHtml = emailHtml.replace(/{{TRACKING_TOKEN}}/g, trackingToken);
     }
 
-    // Send email to applicant
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: "SPU AI CLUB <onboarding@resend.dev>",
-        to: [to],
-        subject: emailContent.subject,
-        html: emailHtml,
-      }),
-    });
-
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      throw new Error(`Resend API error: ${errorText}`);
-    }
-
-    const data = await emailResponse.json();
-    console.log("Email sent successfully to applicant:", data);
+    // Send email to applicant using Gmail SMTP
+    await sendGmailEmail(to, emailContent.subject, emailHtml, "SPU AI CLUB");
+    
+    console.log("Email sent successfully to applicant");
 
     // Send notification to Admin if status is pending and CV file exists
     if (status === 'pending' && cvFilePath && applicationId) {
@@ -371,7 +405,7 @@ const handler = async (req: Request): Promise<Response> => {
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
                   <a href="${cvUrl}" class="button">📄 ดาวน์โหลด CV/Resume</a>
-                  <a href="${SUPABASE_URL}/auth/v1/authorize?provider=google" class="button">👤 ดูใบสมัครเต็ม</a>
+                  <a href="https://urcywqpdbyrduzfzvvne.lovableproject.com/admin" class="button">👤 ดูใบสมัครเต็ม</a>
                 </div>
               </div>
               <div class="footer">
@@ -382,34 +416,32 @@ const handler = async (req: Request): Promise<Response> => {
         </html>
       `;
 
-      const adminEmailResponse = await fetch("https://api.resend.com/emails", {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${RESEND_API_KEY}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          from: "SPU AI CLUB Admin <onboarding@resend.dev>",
-          to: [adminEmail],
-          subject: `ใบสมัครใหม่จาก ${fullName}`,
-          html: adminEmailHtml,
-        }),
-      });
-
-      if (adminEmailResponse.ok) {
-        console.log("Admin notification sent successfully");
-      } else {
-        console.error("Failed to send admin notification:", await adminEmailResponse.text());
+      try {
+        await sendGmailEmail(
+          adminEmail, 
+          `🔔 ใบสมัครใหม่จาก ${fullName}`, 
+          adminEmailHtml,
+          "SPU AI CLUB Admin"
+        );
+        console.log("Admin notification sent successfully via Gmail");
+      } catch (error) {
+        console.error("Failed to send admin notification:", error);
       }
     }
 
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-        ...corsHeaders,
-      },
-    });
+    return new Response(
+      JSON.stringify({ 
+        success: true, 
+        message: "Email sent successfully via Gmail SMTP" 
+      }), 
+      {
+        status: 200,
+        headers: {
+          "Content-Type": "application/json",
+          ...corsHeaders,
+        },
+      }
+    );
   } catch (error: any) {
     console.error("Error in send-application-email:", error);
     return new Response(
