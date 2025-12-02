@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import Resend from "https://esm.sh/resend@2.0.0";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.39.3';
 
 const corsHeaders = {
@@ -10,6 +10,8 @@ const corsHeaders = {
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+const resend = new Resend.Resend(Deno.env.get('RESEND_API_KEY') as string);
 
 // Function to replace template variables
 function replaceVariables(template: string, variables: Record<string, string>): string {
@@ -38,38 +40,30 @@ async function getEmailTemplate(templateName: string) {
   return data;
 }
 
-// Function to send email via Gmail SMTP
+// Function to send email via Resend API
 async function sendEmail(
   to: string,
   subject: string,
   html: string,
   fromName: string = "SPU AI CLUB"
 ): Promise<void> {
-  const client = new SMTPClient({
-    connection: {
-      hostname: "smtp.gmail.com",
-      port: 587,
-      tls: true,
-      auth: {
-        username: Deno.env.get("GMAIL_USER")!,
-        password: Deno.env.get("GMAIL_APP_PASSWORD")!,
-      },
-    },
-  });
-
   try {
-    await client.send({
-      from: `${fromName} <${Deno.env.get("GMAIL_USER")!}>`,
-      to: to,
+    const { data, error } = await resend.emails.send({
+      from: `${fromName} <onboarding@resend.dev>`,
+      to: [to],
       subject: subject,
       html: html,
     });
+
+    if (error) {
+      console.error(`Resend API error for ${to}:`, error);
+      throw new Error(error.message || 'Failed to send email');
+    }
+
     console.log(`✉️ Email sent successfully to ${to}`);
   } catch (error) {
     console.error(`Failed to send email to ${to}:`, error);
     throw error;
-  } finally {
-    await client.close();
   }
 }
 
