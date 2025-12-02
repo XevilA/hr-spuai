@@ -60,7 +60,7 @@ serve(async (req) => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "SPU AI CLUB <onboarding@resend.dev>",
+        from: "SPU AI CLUB <noreply@spuhr.tech>",
         to: [to],
         subject: subject,
         html: htmlBody,

@@ -49,7 +49,7 @@ async function sendEmail(
 ): Promise<void> {
   try {
     const { data, error } = await resend.emails.send({
-      from: `${fromName} <onboarding@resend.dev>`,
+      from: `${fromName} <noreply@spuhr.tech>`,
       to: [to],
       subject: subject,
       html: html,
