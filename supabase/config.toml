@@ -3,6 +3,9 @@ project_id = "urcywqpdbyrduzfzvvne"
 [functions.green-chatbot]
 verify_jwt = false
 
+[functions.send-line-notification]
+verify_jwt = false
+
 [functions.send-application-email]
 verify_jwt = false
 
