@@ -9,14 +9,15 @@ const corsHeaders = {
 };
 
 interface LineNotificationRequest {
-  type: "new_application" | "status_change";
-  applicantName: string;
-  email: string;
+  type: "new_application" | "status_change" | "broadcast";
+  applicantName?: string;
+  email?: string;
   phone?: string;
   position?: string;
   oldStatus?: string;
   newStatus?: string;
   applicationId?: string;
+  customMessage?: string;
 }
 
 const handler = async (req: Request): Promise<Response> => {
@@ -38,38 +39,59 @@ const handler = async (req: Request): Promise<Response> => {
     console.log("📱 Sending LINE notification:", body);
 
     let message = "";
+    let endpoint = "";
+    let requestBody: any = {};
 
-    if (body.type === "new_application") {
-      message = `🎉 ใบสมัครใหม่!\n\n` +
-        `👤 ชื่อ: ${body.applicantName}\n` +
-        `📧 อีเมล: ${body.email}\n` +
-        (body.phone ? `📱 เบอร์: ${body.phone}\n` : "") +
-        (body.position ? `💼 ตำแหน่ง: ${body.position}\n` : "") +
-        `\nกรุณาเข้าไปตรวจสอบใน Admin Dashboard`;
-    } else if (body.type === "status_change") {
-      const statusEmoji: Record<string, string> = {
-        pending: "⏳",
-        reviewing: "👀",
-        accepted: "✅",
-        rejected: "❌",
+    if (body.type === "broadcast") {
+      // Broadcast message to all followers
+      message = body.customMessage || "📢 ประกาศจากทีม SPU AI CLUB";
+      endpoint = "https://api.line.me/v2/bot/message/broadcast";
+      requestBody = {
+        messages: [
+          {
+            type: "text",
+            text: message,
+          },
+        ],
       };
+    } else {
+      // Push message to specific user/group
+      if (!LINE_NOTIFY_TO) {
+        console.warn("LINE_NOTIFY_TO not configured, skipping push notification");
+        return new Response(
+          JSON.stringify({ success: false, message: "LINE_NOTIFY_TO not configured" }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json", ...corsHeaders },
+          }
+        );
+      }
 
-      message = `📝 อัปเดตสถานะใบสมัคร\n\n` +
-        `👤 ชื่อ: ${body.applicantName}\n` +
-        `📧 อีเมล: ${body.email}\n` +
-        (body.position ? `💼 ตำแหน่ง: ${body.position}\n` : "") +
-        `\n${statusEmoji[body.oldStatus || ""] || "📌"} สถานะเดิม: ${body.oldStatus}\n` +
-        `${statusEmoji[body.newStatus || ""] || "📌"} สถานะใหม่: ${body.newStatus}`;
-    }
+      if (body.type === "new_application") {
+        message = `🎉 ใบสมัครใหม่!\n\n` +
+          `👤 ชื่อ: ${body.applicantName}\n` +
+          `📧 อีเมล: ${body.email}\n` +
+          (body.phone ? `📱 เบอร์: ${body.phone}\n` : "") +
+          (body.position ? `💼 ตำแหน่ง: ${body.position}\n` : "") +
+          `\nกรุณาเข้าไปตรวจสอบใน Admin Dashboard`;
+      } else if (body.type === "status_change") {
+        const statusEmoji: Record<string, string> = {
+          pending: "⏳",
+          reviewing: "👀",
+          accepted: "✅",
+          rejected: "❌",
+        };
 
-    // Send LINE Push Message
-    const lineResponse = await fetch("https://api.line.me/v2/bot/message/push", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
-      },
-      body: JSON.stringify({
+        message = `📝 อัปเดตสถานะใบสมัคร\n\n` +
+          `👤 ชื่อ: ${body.applicantName}\n` +
+          `📧 อีเมล: ${body.email}\n` +
+          (body.position ? `💼 ตำแหน่ง: ${body.position}\n` : "") +
+          `\n${statusEmoji[body.oldStatus || ""] || "📌"} สถานะเดิม: ${body.oldStatus}\n` +
+          `${statusEmoji[body.newStatus || ""] || "📌"} สถานะใหม่: ${body.newStatus}`;
+      }
+
+      endpoint = "https://api.line.me/v2/bot/message/push";
+      requestBody = {
         to: LINE_NOTIFY_TO,
         messages: [
           {
@@ -77,7 +99,17 @@ const handler = async (req: Request): Promise<Response> => {
             text: message,
           },
         ],
-      }),
+      };
+    }
+
+    // Send LINE Message
+    const lineResponse = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${LINE_CHANNEL_ACCESS_TOKEN}`,
+      },
+      body: JSON.stringify(requestBody),
     });
 
     if (!lineResponse.ok) {
