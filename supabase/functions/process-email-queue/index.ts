@@ -182,7 +182,7 @@ const handler = async (req: Request): Promise<Response> => {
       .eq('status', 'pending')
       .lte('scheduled_at', new Date().toISOString())
       .order('created_at', { ascending: true })
-      .limit(10); // Process up to 10 emails at a time
+      .limit(50); // Process up to 50 emails at a time for high volume
 
     if (fetchError) {
       throw fetchError;
@@ -201,14 +201,25 @@ const handler = async (req: Request): Promise<Response> => {
 
     console.log(`📧 Found ${pendingEmails.length} pending emails to process`);
 
-    // Process emails sequentially to avoid rate limiting
+    // Process emails in batches of 5 for parallel processing
+    const batchSize = 5;
     const results = [];
-    for (const email of pendingEmails) {
-      const result = await processEmailQueueItem(email);
-      results.push(result);
+    
+    for (let i = 0; i < pendingEmails.length; i += batchSize) {
+      const batch = pendingEmails.slice(i, i + batchSize);
+      console.log(`Processing batch ${Math.floor(i / batchSize) + 1} with ${batch.length} emails...`);
       
-      // Add a small delay between sends to avoid rate limiting
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Process batch in parallel
+      const batchResults = await Promise.all(
+        batch.map(email => processEmailQueueItem(email))
+      );
+      
+      results.push(...batchResults);
+      
+      // Small delay between batches to avoid rate limiting
+      if (i + batchSize < pendingEmails.length) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
     }
 
     const successful = results.filter(r => r.success).length;
