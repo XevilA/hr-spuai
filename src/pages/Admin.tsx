@@ -11,6 +11,7 @@ import { PositionsManager } from "@/components/admin/PositionsManager";
 import { Dashboard } from "@/components/admin/Dashboard";
 import { EmailTemplatesManager } from "@/components/admin/EmailTemplatesManager";
 import { EmailLogsViewer } from "@/components/admin/EmailLogsViewer";
+import { LineBroadcastManager } from "@/components/admin/LineBroadcastManager";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -106,6 +107,7 @@ const Admin = () => {
               <TabsTrigger value="positions">Positions</TabsTrigger>
               <TabsTrigger value="emails">Email Templates</TabsTrigger>
               <TabsTrigger value="email-logs">Email Logs</TabsTrigger>
+              <TabsTrigger value="line-broadcast">LINE Broadcast</TabsTrigger>
               {userRole === "super_admin" && (
                 <TabsTrigger value="users">User Management</TabsTrigger>
               )}
@@ -133,6 +135,10 @@ const Admin = () => {
 
             <TabsContent value="email-logs">
               <EmailLogsViewer />
+            </TabsContent>
+
+            <TabsContent value="line-broadcast">
+              <LineBroadcastManager />
             </TabsContent>
 
             {userRole === "super_admin" && (
