@@ -1,5 +1,8 @@
 project_id = "urcywqpdbyrduzfzvvne"
 
+[functions.ai-assistant]
+verify_jwt = true
+
 [functions.green-chatbot]
 verify_jwt = false
 
