@@ -12,6 +12,7 @@ import { Dashboard } from "@/components/admin/Dashboard";
 import { EmailTemplatesManager } from "@/components/admin/EmailTemplatesManager";
 import { EmailLogsViewer } from "@/components/admin/EmailLogsViewer";
 import { LineBroadcastManager } from "@/components/admin/LineBroadcastManager";
+import { AIAssistant } from "@/components/admin/AIAssistant";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -102,6 +103,7 @@ const Admin = () => {
           <Tabs defaultValue="dashboard" className="space-y-6">
             <TabsList>
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
+              <TabsTrigger value="ai-assistant">🤖 AI Assistant</TabsTrigger>
               <TabsTrigger value="applications">Applications</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="positions">Positions</TabsTrigger>
@@ -115,6 +117,10 @@ const Admin = () => {
 
             <TabsContent value="dashboard">
               <Dashboard />
+            </TabsContent>
+
+            <TabsContent value="ai-assistant">
+              <AIAssistant />
             </TabsContent>
 
             <TabsContent value="applications">
