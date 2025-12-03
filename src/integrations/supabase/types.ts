@@ -288,6 +288,71 @@ export type Database = {
         }
         Relationships: []
       }
+      team_members: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          department: string
+          description: string | null
+          division: string | null
+          email: string | null
+          end_date: string | null
+          full_name: string
+          id: string
+          is_active: boolean | null
+          nickname: string | null
+          phone: string | null
+          photo_url: string | null
+          position: string
+          start_date: string
+          updated_at: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          department: string
+          description?: string | null
+          division?: string | null
+          email?: string | null
+          end_date?: string | null
+          full_name: string
+          id?: string
+          is_active?: boolean | null
+          nickname?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position: string
+          start_date?: string
+          updated_at?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          department?: string
+          description?: string | null
+          division?: string | null
+          email?: string | null
+          end_date?: string | null
+          full_name?: string
+          id?: string
+          is_active?: boolean | null
+          nickname?: string | null
+          phone?: string | null
+          photo_url?: string | null
+          position?: string
+          start_date?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_members_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           created_at: string | null
