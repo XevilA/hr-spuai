@@ -28,7 +28,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Download, Search, Mail, Eye } from "lucide-react";
+import { Download, Search, Mail, Eye, Pencil, Trash2 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Label } from "@/components/ui/label";
 
 type Application = {
   id: string;
@@ -63,11 +74,16 @@ export const ApplicationsTable = () => {
   const [statusFilter, setStatusFilter] = useState("all");
   const [messageDialogOpen, setMessageDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageContent, setMessageContent] = useState("");
   const [messageEmail, setMessageEmail] = useState("");
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [editForm, setEditForm] = useState<Partial<Application>>({});
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -212,6 +228,114 @@ export const ApplicationsTable = () => {
     setMessageDialogOpen(true);
   };
 
+  const openEditDialog = (applicant: Application) => {
+    setSelectedApplicant(applicant);
+    setEditForm({
+      full_name: applicant.full_name,
+      nickname: applicant.nickname,
+      email: applicant.email,
+      phone: applicant.phone,
+      line_id: applicant.line_id || "",
+      instagram: applicant.instagram || "",
+      university_year: applicant.university_year,
+      faculty: applicant.faculty,
+      major: applicant.major,
+      motivation: applicant.motivation,
+      interests_skills: applicant.interests_skills || "",
+      portfolio_url: applicant.portfolio_url || "",
+    });
+    setEditDialogOpen(true);
+  };
+
+  const openDeleteDialog = (applicant: Application) => {
+    setSelectedApplicant(applicant);
+    setDeleteDialogOpen(true);
+  };
+
+  const updateApplicant = async () => {
+    if (!selectedApplicant) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({
+          full_name: editForm.full_name,
+          nickname: editForm.nickname,
+          email: editForm.email,
+          phone: editForm.phone,
+          line_id: editForm.line_id || null,
+          instagram: editForm.instagram || null,
+          university_year: editForm.university_year,
+          faculty: editForm.faculty,
+          major: editForm.major,
+          motivation: editForm.motivation,
+          interests_skills: editForm.interests_skills || null,
+          portfolio_url: editForm.portfolio_url || null,
+        })
+        .eq("id", selectedApplicant.id);
+
+      if (error) throw error;
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === selectedApplicant.id ? { ...app, ...editForm } : app
+        )
+      );
+
+      toast({
+        title: "สำเร็จ",
+        description: "อัพเดทข้อมูลผู้สมัครเรียบร้อยแล้ว",
+      });
+      setEditDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const deleteApplicant = async () => {
+    if (!selectedApplicant) return;
+    setDeleting(true);
+    try {
+      // Delete CV file if exists
+      if (selectedApplicant.cv_file_path) {
+        await supabase.storage
+          .from("cvs")
+          .remove([selectedApplicant.cv_file_path]);
+      }
+
+      const { error } = await supabase
+        .from("applications")
+        .delete()
+        .eq("id", selectedApplicant.id);
+
+      if (error) throw error;
+
+      setApplications((prev) =>
+        prev.filter((app) => app.id !== selectedApplicant.id)
+      );
+
+      toast({
+        title: "สำเร็จ",
+        description: "ลบข้อมูลผู้สมัครเรียบร้อยแล้ว",
+      });
+      setDeleteDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const sendMessage = async () => {
     if (!selectedApplicant) return;
 
@@ -328,21 +452,28 @@ export const ApplicationsTable = () => {
                   </Select>
                 </TableCell>
                 <TableCell>
-                  <div className="flex gap-2">
+                  <div className="flex gap-1">
                     <Button
                       size="sm"
                       variant="outline"
                       onClick={() => openDetailsDialog(app)}
-                      className="gap-2"
+                      title="View Details"
                     >
                       <Eye className="h-4 w-4" />
-                      View
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditDialog(app)}
+                      title="Edit"
+                    >
+                      <Pencil className="h-4 w-4" />
                     </Button>
                     <Button
                       size="sm"
                       variant="ghost"
                       onClick={() => openMessageDialog(app)}
-                      className="gap-2"
+                      title="Send Email"
                     >
                       <Mail className="h-4 w-4" />
                     </Button>
@@ -351,10 +482,20 @@ export const ApplicationsTable = () => {
                         size="sm"
                         variant="ghost"
                         onClick={() => downloadCV(app.cv_file_path!, app.full_name)}
+                        title="Download CV"
                       >
                         <Download className="h-4 w-4" />
                       </Button>
                     )}
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openDeleteDialog(app)}
+                      className="text-destructive hover:text-destructive"
+                      title="Delete"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -557,11 +698,146 @@ export const ApplicationsTable = () => {
               onClick={sendMessage}
               disabled={!messageSubject || !messageContent || !messageEmail || sendingMessage}
             >
-              {sendingMessage ? "Sending..." : "Send Message"}
+            {sendingMessage ? "Sending..." : "Send Message"}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Edit Dialog */}
+      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>แก้ไขข้อมูลผู้สมัคร</DialogTitle>
+            <DialogDescription>
+              แก้ไขข้อมูลของ {selectedApplicant?.full_name}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>ชื่อ-นามสกุล</Label>
+                <Input
+                  value={editForm.full_name || ""}
+                  onChange={(e) => setEditForm({ ...editForm, full_name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>ชื่อเล่น</Label>
+                <Input
+                  value={editForm.nickname || ""}
+                  onChange={(e) => setEditForm({ ...editForm, nickname: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={editForm.email || ""}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>เบอร์โทร</Label>
+                <Input
+                  value={editForm.phone || ""}
+                  onChange={(e) => setEditForm({ ...editForm, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Line ID</Label>
+                <Input
+                  value={editForm.line_id || ""}
+                  onChange={(e) => setEditForm({ ...editForm, line_id: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Instagram</Label>
+                <Input
+                  value={editForm.instagram || ""}
+                  onChange={(e) => setEditForm({ ...editForm, instagram: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>ชั้นปี</Label>
+                <Input
+                  type="number"
+                  value={editForm.university_year || ""}
+                  onChange={(e) => setEditForm({ ...editForm, university_year: parseInt(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>คณะ</Label>
+                <Input
+                  value={editForm.faculty || ""}
+                  onChange={(e) => setEditForm({ ...editForm, faculty: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>สาขา</Label>
+                <Input
+                  value={editForm.major || ""}
+                  onChange={(e) => setEditForm({ ...editForm, major: e.target.value })}
+                />
+              </div>
+              <div className="col-span-2 space-y-2">
+                <Label>Portfolio URL</Label>
+                <Input
+                  value={editForm.portfolio_url || ""}
+                  onChange={(e) => setEditForm({ ...editForm, portfolio_url: e.target.value })}
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label>ทักษะและความสนใจ</Label>
+              <Textarea
+                value={editForm.interests_skills || ""}
+                onChange={(e) => setEditForm({ ...editForm, interests_skills: e.target.value })}
+                className="min-h-[100px]"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>แรงจูงใจในการสมัคร</Label>
+              <Textarea
+                value={editForm.motivation || ""}
+                onChange={(e) => setEditForm({ ...editForm, motivation: e.target.value })}
+                className="min-h-[100px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} disabled={saving}>
+              ยกเลิก
+            </Button>
+            <Button onClick={updateApplicant} disabled={saving}>
+              {saving ? "กำลังบันทึก..." : "บันทึก"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบ</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณต้องการลบข้อมูลผู้สมัคร "{selectedApplicant?.full_name}" หรือไม่?
+              การดำเนินการนี้ไม่สามารถยกเลิกได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deleting}>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={deleteApplicant}
+              disabled={deleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleting ? "กำลังลบ..." : "ลบ"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };
