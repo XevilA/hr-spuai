@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -7,7 +7,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, Brain, Mail, MessageSquare, FileText, Loader2 } from "lucide-react";
+import { Sparkles, Brain, Mail, MessageSquare, FileText, Loader2, User, FileUp, ExternalLink } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type AIModel = 'gemini' | 'deepseek' | 'glm';
@@ -19,6 +19,26 @@ interface Message {
   model?: string;
 }
 
+interface Application {
+  id: string;
+  full_name: string;
+  nickname: string;
+  email: string;
+  phone: string;
+  faculty: string;
+  major: string;
+  university: string | null;
+  university_year: number;
+  motivation: string;
+  interests_skills: string | null;
+  cv_file_path: string | null;
+  portfolio_url: string | null;
+  status: string;
+  position_id: string | null;
+  created_at: string;
+  positions?: { title: string } | null;
+}
+
 export const AIAssistant = () => {
   const [selectedModel, setSelectedModel] = useState<AIModel>('gemini');
   const [loading, setLoading] = useState(false);
@@ -26,9 +46,12 @@ export const AIAssistant = () => {
   const [chatInput, setChatInput] = useState('');
   
   // Analyze Application
-  const [applicationId, setApplicationId] = useState('');
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [selectedApplicationId, setSelectedApplicationId] = useState('');
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [analysisPrompt, setAnalysisPrompt] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
+  const [loadingApplications, setLoadingApplications] = useState(false);
   
   // Generate Email
   const [emailPrompt, setEmailPrompt] = useState('');
@@ -37,6 +60,45 @@ export const AIAssistant = () => {
   // Generate Broadcast
   const [broadcastPrompt, setBroadcastPrompt] = useState('');
   const [broadcastResult, setBroadcastResult] = useState('');
+
+  // Fetch applications on mount
+  useEffect(() => {
+    fetchApplications();
+  }, []);
+
+  // Update selected application when ID changes
+  useEffect(() => {
+    if (selectedApplicationId) {
+      const app = applications.find(a => a.id === selectedApplicationId);
+      setSelectedApplication(app || null);
+    } else {
+      setSelectedApplication(null);
+    }
+  }, [selectedApplicationId, applications]);
+
+  const fetchApplications = async () => {
+    setLoadingApplications(true);
+    try {
+      const { data, error } = await supabase
+        .from('applications')
+        .select('*, positions(title)')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setApplications(data || []);
+    } catch (error: any) {
+      console.error('Error fetching applications:', error);
+      toast.error('ไม่สามารถโหลดรายชื่อผู้สมัครได้');
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  const getCvUrl = (cvPath: string | null) => {
+    if (!cvPath) return null;
+    const { data } = supabase.storage.from('cvs').getPublicUrl(cvPath);
+    return data?.publicUrl;
+  };
 
   const getModelBadge = (model: AIModel) => {
     const badges = {
@@ -72,24 +134,12 @@ export const AIAssistant = () => {
   };
 
   const handleAnalyzeApplication = async () => {
-    if (!applicationId.trim()) {
-      toast.error('กรุณาระบุ Application ID');
+    if (!selectedApplication) {
+      toast.error('กรุณาเลือกผู้สมัคร');
       return;
     }
 
-    // Fetch application data
-    const { data: application, error } = await supabase
-      .from('applications')
-      .select('*')
-      .eq('id', applicationId)
-      .single();
-
-    if (error || !application) {
-      toast.error('ไม่พบใบสมัครที่ระบุ');
-      return;
-    }
-
-    const result = await callAI('analyze-application', analysisPrompt || 'วิเคราะห์ใบสมัครนี้', application);
+    const result = await callAI('analyze-application', analysisPrompt || 'วิเคราะห์ใบสมัครนี้อย่างละเอียด', selectedApplication);
     if (result) {
       setAnalysisResult(result.content);
       toast.success('วิเคราะห์เสร็จสิ้น!');
@@ -277,37 +327,131 @@ export const AIAssistant = () => {
             <CardHeader>
               <CardTitle>วิเคราะห์ใบสมัคร</CardTitle>
               <CardDescription>
-                ให้ AI วิเคราะห์ใบสมัครและให้คำแนะนำ
+                เลือกผู้สมัครและให้ AI วิเคราะห์ข้อมูลจากใบสมัครและ CV
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {/* Applicant Selector */}
               <div>
-                <label className="text-sm font-medium">Application ID</label>
-                <input
-                  type="text"
-                  className="w-full mt-1 px-3 py-2 border rounded-md"
-                  placeholder="ระบุ ID ของใบสมัคร"
-                  value={applicationId}
-                  onChange={(e) => setApplicationId(e.target.value)}
-                />
+                <label className="text-sm font-medium flex items-center gap-2">
+                  <User className="w-4 h-4" />
+                  เลือกผู้สมัคร
+                </label>
+                <Select value={selectedApplicationId} onValueChange={setSelectedApplicationId}>
+                  <SelectTrigger className="w-full mt-1">
+                    <SelectValue placeholder={loadingApplications ? "กำลังโหลด..." : "เลือกผู้สมัครที่ต้องการวิเคราะห์"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {applications.map((app) => (
+                      <SelectItem key={app.id} value={app.id}>
+                        {app.full_name} ({app.nickname}) - {app.positions?.title || 'ไม่ระบุตำแหน่ง'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
+
+              {/* Selected Application Details */}
+              {selectedApplication && (
+                <div className="p-4 border rounded-lg bg-muted/30 space-y-3">
+                  <h4 className="font-semibold text-sm text-primary">📋 ข้อมูลผู้สมัคร</h4>
+                  
+                  <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div>
+                      <span className="text-muted-foreground">ชื่อ-นามสกุล:</span>
+                      <p className="font-medium">{selectedApplication.full_name} ({selectedApplication.nickname})</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">ตำแหน่งที่สมัคร:</span>
+                      <p className="font-medium">{selectedApplication.positions?.title || 'ไม่ระบุ'}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">คณะ/สาขา:</span>
+                      <p className="font-medium">{selectedApplication.faculty} / {selectedApplication.major}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">ปี:</span>
+                      <p className="font-medium">{selectedApplication.university_year}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">Email:</span>
+                      <p className="font-medium">{selectedApplication.email}</p>
+                    </div>
+                    <div>
+                      <span className="text-muted-foreground">สถานะ:</span>
+                      <Badge variant="outline">{selectedApplication.status}</Badge>
+                    </div>
+                  </div>
+
+                  {/* Motivation */}
+                  <div className="mt-3">
+                    <span className="text-muted-foreground text-sm">แรงจูงใจในการสมัคร:</span>
+                    <p className="text-sm mt-1 p-2 bg-background rounded border">{selectedApplication.motivation}</p>
+                  </div>
+
+                  {/* Interests & Skills */}
+                  {selectedApplication.interests_skills && (
+                    <div className="mt-2">
+                      <span className="text-muted-foreground text-sm">ความสนใจและทักษะ:</span>
+                      <p className="text-sm mt-1 p-2 bg-background rounded border">{selectedApplication.interests_skills}</p>
+                    </div>
+                  )}
+
+                  {/* CV & Portfolio Links */}
+                  <div className="flex gap-3 mt-3">
+                    {selectedApplication.cv_file_path && (
+                      <a 
+                        href={getCvUrl(selectedApplication.cv_file_path) || '#'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <FileUp className="w-4 h-4" />
+                        ดู CV/Resume
+                        <ExternalLink className="w-3 h-3" />
+                      </a>
+                    )}
+                    {selectedApplication.portfolio_url && (
+                      <a 
+                        href={selectedApplication.portfolio_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                      >
+                        <ExternalLink className="w-4 h-4" />
+                        ดู Portfolio
+                      </a>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Analysis Prompt */}
               <div>
-                <label className="text-sm font-medium">คำถามเพิ่มเติม (ถ้ามี)</label>
+                <label className="text-sm font-medium">คำถามเพิ่มเติมสำหรับ AI (ไม่บังคับ)</label>
                 <Textarea
-                  placeholder="เช่น: ให้ความเห็นเกี่ยวกับความเหมาะสมสำหรับตำแหน่ง AI Developer"
+                  placeholder="เช่น: ให้ความเห็นเกี่ยวกับความเหมาะสมสำหรับตำแหน่งนี้, วิเคราะห์จุดแข็งจุดอ่อน, แนะนำคำถามสัมภาษณ์"
                   value={analysisPrompt}
                   onChange={(e) => setAnalysisPrompt(e.target.value)}
                   className="mt-1"
                 />
               </div>
-              <Button onClick={handleAnalyzeApplication} disabled={loading} className="w-full">
+
+              <Button 
+                onClick={handleAnalyzeApplication} 
+                disabled={loading || !selectedApplication} 
+                className="w-full"
+              >
                 {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Brain className="w-4 h-4 mr-2" />}
                 วิเคราะห์ใบสมัคร
               </Button>
               
               {analysisResult && (
                 <div className="mt-4 p-4 border rounded-lg bg-muted/20">
-                  <h3 className="font-semibold mb-2">ผลการวิเคราะห์:</h3>
+                  <h3 className="font-semibold mb-2 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    ผลการวิเคราะห์:
+                  </h3>
                   <div className="prose prose-sm dark:prose-invert max-w-none">
                     <ReactMarkdown>{analysisResult}</ReactMarkdown>
                   </div>
