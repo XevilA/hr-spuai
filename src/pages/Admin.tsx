@@ -13,6 +13,7 @@ import { EmailTemplatesManager } from "@/components/admin/EmailTemplatesManager"
 import { EmailLogsViewer } from "@/components/admin/EmailLogsViewer";
 import { LineBroadcastManager } from "@/components/admin/LineBroadcastManager";
 import { AIAssistant } from "@/components/admin/AIAssistant";
+import { TeamMembersManager } from "@/components/admin/TeamMembersManager";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -101,10 +102,11 @@ const Admin = () => {
           animate={{ opacity: 1, y: 0 }}
         >
           <Tabs defaultValue="dashboard" className="space-y-6">
-            <TabsList>
+            <TabsList className="flex-wrap h-auto gap-1">
               <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
               <TabsTrigger value="ai-assistant">🤖 AI Assistant</TabsTrigger>
               <TabsTrigger value="applications">Applications</TabsTrigger>
+              <TabsTrigger value="team-members">👥 Team</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="positions">Positions</TabsTrigger>
               <TabsTrigger value="emails">Email Templates</TabsTrigger>
@@ -125,6 +127,10 @@ const Admin = () => {
 
             <TabsContent value="applications">
               <ApplicationsTable />
+            </TabsContent>
+
+            <TabsContent value="team-members">
+              <TeamMembersManager />
             </TabsContent>
 
             <TabsContent value="projects">

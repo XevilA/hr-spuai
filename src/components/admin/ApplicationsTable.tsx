@@ -26,9 +26,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
-import { Download, Search, Mail, Eye, Pencil, Trash2 } from "lucide-react";
+import { Download, Search, Mail, Eye, Pencil, Trash2, UserPlus } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -40,6 +39,11 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Label } from "@/components/ui/label";
+
+type Position = {
+  id: string;
+  title: string;
+};
 
 type Application = {
   id: string;
@@ -69,6 +73,7 @@ type Application = {
 export const ApplicationsTable = () => {
   const [applications, setApplications] = useState<Application[]>([]);
   const [filteredApps, setFilteredApps] = useState<Application[]>([]);
+  const [positions, setPositions] = useState<Position[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
@@ -76,6 +81,7 @@ export const ApplicationsTable = () => {
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [selectedApplicant, setSelectedApplicant] = useState<Application | null>(null);
   const [messageSubject, setMessageSubject] = useState("");
   const [messageContent, setMessageContent] = useState("");
@@ -84,10 +90,17 @@ export const ApplicationsTable = () => {
   const [editForm, setEditForm] = useState<Partial<Application>>({});
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [approveForm, setApproveForm] = useState({
+    department: "",
+    division: "",
+    description: "",
+  });
   const { toast } = useToast();
 
   useEffect(() => {
     fetchApplications();
+    fetchPositions();
   }, []);
 
   useEffect(() => {
@@ -116,6 +129,46 @@ export const ApplicationsTable = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPositions = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("positions")
+        .select("id, title")
+        .eq("is_active", true)
+        .order("title");
+
+      if (error) throw error;
+      setPositions(data || []);
+    } catch (error: any) {
+      console.error("Error fetching positions:", error);
+    }
+  };
+
+  const updatePosition = async (id: string, positionId: string) => {
+    try {
+      const { error } = await supabase
+        .from("applications")
+        .update({ position_id: positionId })
+        .eq("id", id);
+
+      if (error) throw error;
+
+      // Refresh to get updated position title
+      fetchApplications();
+
+      toast({
+        title: "สำเร็จ",
+        description: "อัพเดทตำแหน่งเรียบร้อยแล้ว",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     }
   };
 
@@ -250,6 +303,77 @@ export const ApplicationsTable = () => {
   const openDeleteDialog = (applicant: Application) => {
     setSelectedApplicant(applicant);
     setDeleteDialogOpen(true);
+  };
+
+  const openApproveDialog = (applicant: Application) => {
+    setSelectedApplicant(applicant);
+    setApproveForm({
+      department: "",
+      division: "",
+      description: "",
+    });
+    setApproveDialogOpen(true);
+  };
+
+  const approveToTeam = async () => {
+    if (!selectedApplicant) return;
+    if (!approveForm.department) {
+      toast({
+        title: "Error",
+        description: "กรุณาระบุฝ่าย",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setApproving(true);
+    try {
+      // Insert into team_members
+      const { error: insertError } = await supabase.from("team_members").insert([
+        {
+          application_id: selectedApplicant.id,
+          full_name: selectedApplicant.full_name,
+          nickname: selectedApplicant.nickname,
+          email: selectedApplicant.email,
+          phone: selectedApplicant.phone,
+          position: selectedApplicant.positions?.title || "Member",
+          department: approveForm.department,
+          division: approveForm.division || null,
+          description: approveForm.description || null,
+          is_active: true,
+        },
+      ]);
+
+      if (insertError) throw insertError;
+
+      // Update application status to accepted
+      const { error: updateError } = await supabase
+        .from("applications")
+        .update({ status: "accepted" })
+        .eq("id", selectedApplicant.id);
+
+      if (updateError) throw updateError;
+
+      setApplications((prev) =>
+        prev.map((app) =>
+          app.id === selectedApplicant.id ? { ...app, status: "accepted" } : app
+        )
+      );
+
+      toast({
+        title: "สำเร็จ",
+        description: `เพิ่ม ${selectedApplicant.full_name} เป็นสมาชิกทีมเรียบร้อยแล้ว`,
+      });
+      setApproveDialogOpen(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setApproving(false);
+    }
   };
 
   const updateApplicant = async () => {
@@ -421,9 +545,27 @@ export const ApplicationsTable = () => {
               <TableRow key={app.id}>
                 <TableCell className="font-medium">{app.full_name}</TableCell>
                 <TableCell>
-                  <span className="text-sm font-medium text-spu-pink">
-                    {app.positions?.title || "N/A"}
-                  </span>
+                  <Select
+                    value={app.position_id || "none"}
+                    onValueChange={(value) => {
+                      if (value !== "none") updatePosition(app.id, value);
+                    }}
+                  >
+                    <SelectTrigger className="w-40">
+                      <SelectValue>
+                        <span className="text-sm font-medium text-spu-pink">
+                          {app.positions?.title || "N/A"}
+                        </span>
+                      </SelectValue>
+                    </SelectTrigger>
+                    <SelectContent>
+                      {positions.map((pos) => (
+                        <SelectItem key={pos.id} value={pos.id}>
+                          {pos.title}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </TableCell>
                 <TableCell>{app.email}</TableCell>
                 <TableCell>
@@ -496,6 +638,17 @@ export const ApplicationsTable = () => {
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
+                    {app.status !== "accepted" && (
+                      <Button
+                        size="sm"
+                        variant="default"
+                        onClick={() => openApproveDialog(app)}
+                        className="bg-green-600 hover:bg-green-700"
+                        title="Approve to Team"
+                      >
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
+                    )}
                   </div>
                 </TableCell>
                 <TableCell className="text-sm text-muted-foreground">
@@ -838,6 +991,61 @@ export const ApplicationsTable = () => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Approve to Team Dialog */}
+      <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>อนุมัติเป็นสมาชิกทีม</DialogTitle>
+            <DialogDescription>
+              เพิ่ม {selectedApplicant?.full_name} เป็นสมาชิกทีม SPU AI CLUB
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label>ชื่อ-นามสกุล</Label>
+              <Input value={selectedApplicant?.full_name || ""} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>ตำแหน่ง</Label>
+              <Input value={selectedApplicant?.positions?.title || "Member"} disabled />
+            </div>
+            <div className="space-y-2">
+              <Label>ฝ่าย *</Label>
+              <Input
+                value={approveForm.department}
+                onChange={(e) => setApproveForm({ ...approveForm, department: e.target.value })}
+                placeholder="เช่น ฝ่ายบริหาร, ฝ่าย Creator, ฝ่าย Developer"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>สังกัด</Label>
+              <Input
+                value={approveForm.division}
+                onChange={(e) => setApproveForm({ ...approveForm, division: e.target.value })}
+                placeholder="เช่น Development Team, Content Team"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>รายละเอียด</Label>
+              <Textarea
+                value={approveForm.description}
+                onChange={(e) => setApproveForm({ ...approveForm, description: e.target.value })}
+                placeholder="รายละเอียดเพิ่มเติม..."
+                className="min-h-[80px]"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setApproveDialogOpen(false)} disabled={approving}>
+              ยกเลิก
+            </Button>
+            <Button onClick={approveToTeam} disabled={approving} className="bg-green-600 hover:bg-green-700">
+              {approving ? "กำลังดำเนินการ..." : "อนุมัติ"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
