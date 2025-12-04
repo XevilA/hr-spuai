@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -20,7 +20,6 @@ import {
   Calendar, 
   Users, 
   Eye,
-  Upload,
   Image as ImageIcon,
   Video,
   Sparkles,
@@ -34,7 +33,11 @@ import {
   CheckCircle2,
   XCircle,
   UserCheck,
-  RefreshCw
+  RefreshCw,
+  Link as LinkIcon,
+  Copy,
+  ExternalLink,
+  User
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
@@ -42,6 +45,7 @@ import { th } from "date-fns/locale";
 
 interface Event {
   id: string;
+  slug: string | null;
   title: string;
   description: string;
   short_description: string | null;
@@ -76,6 +80,8 @@ interface Registration {
   university_year: number | null;
   company_name: string | null;
   job_title: string | null;
+  dietary_requirements: string | null;
+  notes: string | null;
   status: string;
   check_in_token: string | null;
   checked_in_at: string | null;
@@ -129,9 +135,15 @@ export const EventsManager = () => {
   const [includeQR, setIncludeQR] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
+  const [emailTarget, setEmailTarget] = useState<"all" | "selected" | "single">("all");
+  const [singleEmailTarget, setSingleEmailTarget] = useState<Registration | null>(null);
   
   // Check-in state
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
+  
+  // Registration detail dialog
+  const [detailDialogOpen, setDetailDialogOpen] = useState(false);
+  const [selectedRegistration, setSelectedRegistration] = useState<Registration | null>(null);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -139,6 +151,7 @@ export const EventsManager = () => {
   // Form state
   const [formData, setFormData] = useState({
     title: "",
+    slug: "",
     description: "",
     short_description: "",
     image_url: "",
@@ -170,7 +183,6 @@ export const EventsManager = () => {
 
   const fetchEventsWithCounts = async () => {
     try {
-      // Fetch events
       const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("*")
@@ -178,14 +190,12 @@ export const EventsManager = () => {
 
       if (eventsError) throw eventsError;
 
-      // Fetch registration counts for all events
       const { data: regData, error: regError } = await supabase
         .from("event_registrations")
         .select("event_id, checked_in_at");
 
       if (regError) throw regError;
 
-      // Calculate counts
       const eventsWithCounts: EventWithCount[] = (eventsData || []).map(event => {
         const eventRegs = (regData || []).filter(r => r.event_id === event.id);
         return {
@@ -240,7 +250,6 @@ export const EventsManager = () => {
 
       toast.success(`${registration.full_name} เช็คอินสำเร็จ!`);
       
-      // Refresh data
       if (selectedEventId) {
         fetchRegistrations(selectedEventId);
         fetchEventsWithCounts();
@@ -312,9 +321,18 @@ export const EventsManager = () => {
     }
   };
 
+  const generateSlug = (title: string) => {
+    return title
+      .toLowerCase()
+      .replace(/[^a-zA-Z0-9ก-๙]+/g, '-')
+      .replace(/-+/g, '-')
+      .replace(/^-|-$/g, '');
+  };
+
   const resetForm = () => {
     setFormData({
       title: "",
+      slug: "",
       description: "",
       short_description: "",
       image_url: "",
@@ -339,6 +357,7 @@ export const EventsManager = () => {
     setEditingEvent(event);
     setFormData({
       title: event.title,
+      slug: event.slug || "",
       description: event.description,
       short_description: event.short_description || "",
       image_url: event.image_url || "",
@@ -370,6 +389,7 @@ export const EventsManager = () => {
     try {
       const eventData = {
         title: formData.title,
+        slug: formData.slug || null,
         description: formData.description,
         short_description: formData.short_description || null,
         image_url: formData.image_url || null,
@@ -410,7 +430,11 @@ export const EventsManager = () => {
       fetchEventsWithCounts();
     } catch (error: any) {
       console.error("Error saving event:", error);
-      toast.error("เกิดข้อผิดพลาด: " + error.message);
+      if (error.message?.includes("duplicate key") || error.message?.includes("slug")) {
+        toast.error("Slug นี้ถูกใช้งานแล้ว กรุณาใช้ชื่ออื่น");
+      } else {
+        toast.error("เกิดข้อผิดพลาด: " + error.message);
+      }
     }
   };
 
@@ -448,7 +472,7 @@ export const EventsManager = () => {
     }
 
     const csvContent = [
-      ["ชื่อ", "อีเมล", "เบอร์โทร", "อายุ", "ประเภท", "มหาวิทยาลัย", "คณะ", "ปี", "บริษัท", "ตำแหน่ง", "สถานะ", "Check-in", "วันที่ลงทะเบียน"].join(","),
+      ["ชื่อ", "อีเมล", "เบอร์โทร", "อายุ", "ประเภท", "มหาวิทยาลัย", "คณะ", "สาขา", "ปี", "บริษัท", "ตำแหน่ง", "หมายเหตุ", "สถานะ", "Check-in", "วันที่ลงทะเบียน"].join(","),
       ...registrations.map(r => [
         r.full_name,
         r.email,
@@ -457,9 +481,11 @@ export const EventsManager = () => {
         r.participant_type,
         r.university || "",
         r.faculty || "",
+        r.major || "",
         r.university_year || "",
         r.company_name || "",
         r.job_title || "",
+        r.notes || "",
         r.status,
         r.checked_in_at ? format(new Date(r.checked_in_at), "dd/MM/yyyy HH:mm") : "-",
         format(new Date(r.created_at), "dd/MM/yyyy HH:mm")
@@ -482,12 +508,20 @@ export const EventsManager = () => {
     
     setSendingEmail(true);
     try {
+      let recipientIds: string[] | undefined;
+      
+      if (emailTarget === "single" && singleEmailTarget) {
+        recipientIds = [singleEmailTarget.id];
+      } else if (emailTarget === "selected" && selectedRegistrations.length > 0) {
+        recipientIds = selectedRegistrations;
+      }
+      
       const { data, error } = await supabase.functions.invoke("send-event-email", {
         body: {
           event_id: selectedEventId,
           subject: emailSubject,
           message: emailMessage,
-          recipient_ids: selectedRegistrations.length > 0 ? selectedRegistrations : undefined,
+          recipient_ids: recipientIds,
           include_qr: includeQR
         }
       });
@@ -502,6 +536,7 @@ export const EventsManager = () => {
       setEmailSubject("");
       setEmailMessage("");
       setSelectedRegistrations([]);
+      setSingleEmailTarget(null);
     } catch (error: any) {
       console.error("Email error:", error);
       toast.error("เกิดข้อผิดพลาดในการส่งอีเมล");
@@ -510,12 +545,43 @@ export const EventsManager = () => {
     }
   };
 
+  const openEmailDialog = (target: "all" | "selected" | "single", registration?: Registration) => {
+    const selectedEvent = events.find(e => e.id === selectedEventId);
+    setEmailTarget(target);
+    setEmailSubject(`[${selectedEvent?.title || "SPU AI CLUB"}] `);
+    setEmailMessage("");
+    setIncludeQR(true);
+    
+    if (target === "single" && registration) {
+      setSingleEmailTarget(registration);
+    } else {
+      setSingleEmailTarget(null);
+    }
+    
+    setEmailDialogOpen(true);
+  };
+
+  const copyEventUrl = (event: EventWithCount) => {
+    const url = `${window.location.origin}/events/${event.slug || event.id}`;
+    navigator.clipboard.writeText(url);
+    toast.success("คัดลอก URL แล้ว!");
+  };
+
   const filteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     event.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const selectedEvent = events.find(e => e.id === selectedEventId);
+
+  const participantTypeLabel = (type: string) => {
+    switch (type) {
+      case "spu_student": return "นศ. SPU";
+      case "student": return "นักศึกษา";
+      case "business": return "ธุรกิจ";
+      default: return "ทั่วไป";
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -570,10 +636,47 @@ export const EventsManager = () => {
                       <Label>ชื่อกิจกรรม *</Label>
                       <Input
                         value={formData.title}
-                        onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                        onChange={(e) => {
+                          const title = e.target.value;
+                          setFormData({ 
+                            ...formData, 
+                            title,
+                            slug: formData.slug || generateSlug(title)
+                          });
+                        }}
                         placeholder="เช่น AI Hackathon 2024"
                         required
                       />
+                    </div>
+
+                    <div>
+                      <Label className="flex items-center gap-2">
+                        <LinkIcon className="w-4 h-4" />
+                        Slug (URL)
+                      </Label>
+                      <div className="flex gap-2">
+                        <div className="flex-1 relative">
+                          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">
+                            /events/
+                          </span>
+                          <Input
+                            value={formData.slug}
+                            onChange={(e) => setFormData({ ...formData, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '-') })}
+                            placeholder="aihackathon2025"
+                            className="pl-16"
+                          />
+                        </div>
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => setFormData({ ...formData, slug: generateSlug(formData.title) })}
+                        >
+                          สร้างอัตโนมัติ
+                        </Button>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        ใช้ตัวอักษรภาษาอังกฤษพิมพ์เล็ก, ตัวเลข และ - เท่านั้น
+                      </p>
                     </div>
 
                     <div>
@@ -882,6 +985,21 @@ export const EventsManager = () => {
                             )}
                           </div>
                           
+                          {/* URL */}
+                          <div className="flex items-center gap-2 mb-2">
+                            <code className="text-xs bg-muted px-2 py-1 rounded">
+                              /events/{event.slug || event.id}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6"
+                              onClick={() => copyEventUrl(event)}
+                            >
+                              <Copy className="w-3 h-3" />
+                            </Button>
+                          </div>
+                          
                           <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
                             <div className="flex items-center gap-1">
                               <Calendar className="w-4 h-4" />
@@ -927,10 +1045,10 @@ export const EventsManager = () => {
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => window.open(`/events/${event.id}`, '_blank')}
+                            onClick={() => window.open(`/events/${event.slug || event.id}`, '_blank')}
                             title="ดูตัวอย่าง"
                           >
-                            <Eye className="w-4 h-4" />
+                            <ExternalLink className="w-4 h-4" />
                           </Button>
                           <Button
                             variant="ghost"
@@ -946,12 +1064,10 @@ export const EventsManager = () => {
                             className="text-primary"
                             onClick={() => {
                               setSelectedEventId(event.id);
-                              setEmailSubject(`[${event.title}] `);
-                              setEmailMessage("");
-                              setSelectedRegistrations([]);
-                              setEmailDialogOpen(true);
+                              fetchRegistrations(event.id);
+                              setTimeout(() => openEmailDialog("all"), 500);
                             }}
-                            title="ส่งอีเมล"
+                            title="Broadcast Email"
                           >
                             <Mail className="w-4 h-4" />
                           </Button>
@@ -997,7 +1113,10 @@ export const EventsManager = () => {
                       <h3 className="text-lg font-bold text-primary">
                         {selectedEvent?.title}
                       </h3>
-                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
+                      <p className="text-xs text-muted-foreground mb-2">
+                        /events/{selectedEvent?.slug || selectedEvent?.id}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-4 text-sm">
                         <div className="flex items-center gap-2 px-3 py-1 bg-background rounded-full">
                           <Users className="w-4 h-4 text-muted-foreground" />
                           <span className="font-medium">{registrations.length}</span>
@@ -1032,16 +1151,11 @@ export const EventsManager = () => {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => {
-                          setEmailSubject(`[${selectedEvent?.title}] `);
-                          setEmailMessage("");
-                          setSelectedRegistrations([]);
-                          setEmailDialogOpen(true);
-                        }}
+                        onClick={() => openEmailDialog(selectedRegistrations.length > 0 ? "selected" : "all")}
                         disabled={registrations.length === 0}
                       >
                         <Mail className="w-4 h-4 mr-2" />
-                        ส่งอีเมล
+                        {selectedRegistrations.length > 0 ? `ส่งถึง ${selectedRegistrations.length} คน` : "Broadcast ทั้งหมด"}
                       </Button>
                       <Button variant="outline" size="sm" onClick={exportRegistrations}>
                         <Download className="w-4 h-4 mr-2" />
@@ -1079,7 +1193,6 @@ export const EventsManager = () => {
                         <TableHead>ผู้ลงทะเบียน</TableHead>
                         <TableHead>ประเภท</TableHead>
                         <TableHead>สังกัด</TableHead>
-                        <TableHead>เบอร์โทร</TableHead>
                         <TableHead className="text-center">Check-in</TableHead>
                         <TableHead className="text-right">จัดการ</TableHead>
                       </TableRow>
@@ -1106,20 +1219,22 @@ export const EventsManager = () => {
                             <div>
                               <p className="font-medium">{reg.full_name}</p>
                               <p className="text-xs text-muted-foreground">{reg.email}</p>
+                              {reg.phone && <p className="text-xs text-muted-foreground">{reg.phone}</p>}
                             </div>
                           </TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-xs">
-                              {reg.participant_type === "spu_student" ? "นศ. SPU" :
-                               reg.participant_type === "student" ? "นักศึกษา" :
-                               reg.participant_type === "business" ? "ธุรกิจ" : "ทั่วไป"}
+                              {participantTypeLabel(reg.participant_type)}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-sm">
-                            {reg.university || reg.company_name || "-"}
-                          </TableCell>
-                          <TableCell className="text-sm">
-                            {reg.phone || "-"}
+                            <div>
+                              {reg.university && <p>{reg.university}</p>}
+                              {reg.faculty && <p className="text-xs text-muted-foreground">{reg.faculty}</p>}
+                              {reg.company_name && <p>{reg.company_name}</p>}
+                              {reg.job_title && <p className="text-xs text-muted-foreground">{reg.job_title}</p>}
+                              {!reg.university && !reg.company_name && "-"}
+                            </div>
                           </TableCell>
                           <TableCell className="text-center">
                             {reg.checked_in_at ? (
@@ -1138,41 +1253,67 @@ export const EventsManager = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-right">
-                            {reg.checked_in_at ? (
+                            <div className="flex items-center justify-end gap-1">
+                              {/* View Details */}
                               <Button
                                 variant="ghost"
-                                size="sm"
-                                onClick={() => handleUndoCheckIn(reg)}
-                                disabled={checkingIn === reg.id}
-                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                size="icon"
+                                onClick={() => {
+                                  setSelectedRegistration(reg);
+                                  setDetailDialogOpen(true);
+                                }}
+                                title="ดูรายละเอียด"
                               >
-                                {checkingIn === reg.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <XCircle className="w-4 h-4 mr-1" />
-                                    ยกเลิก
-                                  </>
-                                )}
+                                <User className="w-4 h-4" />
                               </Button>
-                            ) : (
+                              
+                              {/* Send Individual Email */}
                               <Button
-                                variant="default"
-                                size="sm"
-                                onClick={() => handleCheckIn(reg)}
-                                disabled={checkingIn === reg.id}
-                                className="bg-green-600 hover:bg-green-700"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => openEmailDialog("single", reg)}
+                                title="ส่งอีเมล"
                               >
-                                {checkingIn === reg.id ? (
-                                  <Loader2 className="w-4 h-4 animate-spin" />
-                                ) : (
-                                  <>
-                                    <UserCheck className="w-4 h-4 mr-1" />
-                                    Check-in
-                                  </>
-                                )}
+                                <Mail className="w-4 h-4 text-primary" />
                               </Button>
-                            )}
+
+                              {/* Check-in/Undo */}
+                              {reg.checked_in_at ? (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleUndoCheckIn(reg)}
+                                  disabled={checkingIn === reg.id}
+                                  className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                                >
+                                  {checkingIn === reg.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <XCircle className="w-4 h-4 mr-1" />
+                                      ยกเลิก
+                                    </>
+                                  )}
+                                </Button>
+                              ) : (
+                                <Button
+                                  variant="default"
+                                  size="sm"
+                                  onClick={() => handleCheckIn(reg)}
+                                  disabled={checkingIn === reg.id}
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  {checkingIn === reg.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                  ) : (
+                                    <>
+                                      <UserCheck className="w-4 h-4 mr-1" />
+                                      Check-in
+                                    </>
+                                  )}
+                                </Button>
+                              )}
+                            </div>
                           </TableCell>
                         </TableRow>
                       ))}
@@ -1185,18 +1326,144 @@ export const EventsManager = () => {
         </TabsContent>
       </Tabs>
 
+      {/* Registration Detail Dialog */}
+      <Dialog open={detailDialogOpen} onOpenChange={setDetailDialogOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <User className="w-5 h-5 text-primary" />
+              ข้อมูลผู้ลงทะเบียน
+            </DialogTitle>
+          </DialogHeader>
+          
+          {selectedRegistration && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label className="text-xs text-muted-foreground">ชื่อ-นามสกุล</Label>
+                  <p className="font-medium">{selectedRegistration.full_name}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">ประเภท</Label>
+                  <p>{participantTypeLabel(selectedRegistration.participant_type)}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">อีเมล</Label>
+                  <p>{selectedRegistration.email}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">เบอร์โทร</Label>
+                  <p>{selectedRegistration.phone || "-"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">อายุ</Label>
+                  <p>{selectedRegistration.age || "-"}</p>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">สถานะ</Label>
+                  <Badge variant={selectedRegistration.checked_in_at ? "default" : "outline"}>
+                    {selectedRegistration.checked_in_at ? "เช็คอินแล้ว" : "รอเช็คอิน"}
+                  </Badge>
+                </div>
+              </div>
+              
+              {(selectedRegistration.university || selectedRegistration.faculty || selectedRegistration.major) && (
+                <div className="border-t pt-4">
+                  <Label className="text-xs text-muted-foreground mb-2 block">ข้อมูลนักศึกษา</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">มหาวิทยาลัย</Label>
+                      <p>{selectedRegistration.university || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">ชั้นปี</Label>
+                      <p>{selectedRegistration.university_year ? `ปี ${selectedRegistration.university_year}` : "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">คณะ</Label>
+                      <p>{selectedRegistration.faculty || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">สาขา</Label>
+                      <p>{selectedRegistration.major || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {(selectedRegistration.company_name || selectedRegistration.job_title) && (
+                <div className="border-t pt-4">
+                  <Label className="text-xs text-muted-foreground mb-2 block">ข้อมูลธุรกิจ</Label>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label className="text-xs text-muted-foreground">บริษัท/องค์กร</Label>
+                      <p>{selectedRegistration.company_name || "-"}</p>
+                    </div>
+                    <div>
+                      <Label className="text-xs text-muted-foreground">ตำแหน่ง</Label>
+                      <p>{selectedRegistration.job_title || "-"}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {selectedRegistration.notes && (
+                <div className="border-t pt-4">
+                  <Label className="text-xs text-muted-foreground">หมายเหตุ</Label>
+                  <p className="text-sm bg-muted/50 p-3 rounded mt-1">{selectedRegistration.notes}</p>
+                </div>
+              )}
+              
+              <div className="border-t pt-4">
+                <div className="grid grid-cols-2 gap-4 text-sm">
+                  <div>
+                    <Label className="text-xs text-muted-foreground">ลงทะเบียนเมื่อ</Label>
+                    <p>{format(new Date(selectedRegistration.created_at), "d MMM yyyy HH:mm น.", { locale: th })}</p>
+                  </div>
+                  {selectedRegistration.checked_in_at && (
+                    <div>
+                      <Label className="text-xs text-muted-foreground">เช็คอินเมื่อ</Label>
+                      <p>{format(new Date(selectedRegistration.checked_in_at), "d MMM yyyy HH:mm น.", { locale: th })}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDetailDialogOpen(false)}>
+              ปิด
+            </Button>
+            <Button onClick={() => {
+              setDetailDialogOpen(false);
+              if (selectedRegistration) {
+                openEmailDialog("single", selectedRegistration);
+              }
+            }}>
+              <Mail className="w-4 h-4 mr-2" />
+              ส่งอีเมล
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Email Dialog */}
       <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Mail className="w-5 h-5 text-primary" />
-              ส่งอีเมลถึงผู้ลงทะเบียน
+              {emailTarget === "single" 
+                ? `ส่งอีเมลถึง ${singleEmailTarget?.full_name}` 
+                : emailTarget === "selected"
+                ? `ส่งอีเมลถึง ${selectedRegistrations.length} คนที่เลือก`
+                : `Broadcast ถึงทั้งหมด ${registrations.length} คน`}
             </DialogTitle>
             <DialogDescription>
-              {selectedRegistrations.length > 0 
-                ? `ส่งถึง ${selectedRegistrations.length} คนที่เลือก`
-                : `ส่งถึงทั้งหมด ${registrations.length} คน`}
+              {emailTarget === "single" && singleEmailTarget && (
+                <span className="text-primary">{singleEmailTarget.email}</span>
+              )}
             </DialogDescription>
           </DialogHeader>
 

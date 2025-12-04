@@ -39,7 +39,7 @@ const App = () => (
           <Route path="/teams" element={<Teams />} />
           <Route path="/community" element={<Community />} />
           <Route path="/events" element={<Events />} />
-          <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/events/:slug" element={<EventDetail />} />
           <Route path="/check-in/:token" element={<EventCheckIn />} />
           <Route path="/hidden" element={<Hidden />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

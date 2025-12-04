@@ -28,6 +28,7 @@ import { th } from "date-fns/locale";
 
 interface Event {
   id: string;
+  slug: string | null;
   title: string;
   description: string;
   short_description: string | null;
@@ -47,7 +48,7 @@ interface Event {
 }
 
 const EventDetail = () => {
-  const { id } = useParams<{ id: string }>();
+  const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [event, setEvent] = useState<Event | null>(null);
   const [loading, setLoading] = useState(true);
@@ -74,41 +75,44 @@ const EventDetail = () => {
   });
 
   useEffect(() => {
-    if (id) {
+    if (slug) {
       fetchEvent();
-      fetchRegistrationCount();
     }
-  }, [id]);
+  }, [slug]);
 
   const fetchEvent = async () => {
     try {
-      const { data, error } = await supabase
-        .from("events")
-        .select("*")
-        .eq("id", id)
-        .single();
+      // Try to find by slug first, then by id
+      let query = supabase.from("events").select("*");
+      
+      // Check if slug looks like a UUID
+      const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(slug || "");
+      
+      if (isUUID) {
+        query = query.eq("id", slug);
+      } else {
+        query = query.eq("slug", slug);
+      }
+
+      const { data, error } = await query.single();
 
       if (error) throw error;
       setEvent(data);
+      
+      // Fetch registration count
+      if (data?.id) {
+        const { count } = await supabase
+          .from("event_registrations")
+          .select("*", { count: "exact", head: true })
+          .eq("event_id", data.id);
+        setRegistrationCount(count || 0);
+      }
     } catch (error) {
       console.error("Error fetching event:", error);
       toast.error("ไม่พบกิจกรรมที่ต้องการ");
       navigate("/events");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchRegistrationCount = async () => {
-    try {
-      const { count } = await supabase
-        .from("event_registrations")
-        .select("*", { count: "exact", head: true })
-        .eq("event_id", id);
-
-      setRegistrationCount(count || 0);
-    } catch (error) {
-      console.error("Error fetching registration count:", error);
     }
   };
 
@@ -125,7 +129,7 @@ const EventDetail = () => {
       const { data, error } = await supabase
         .from("event_registrations")
         .insert({
-          event_id: id,
+          event_id: event?.id,
           full_name: formData.full_name,
           email: formData.email,
           phone: formData.phone || null,
@@ -446,12 +450,12 @@ const EventDetail = () => {
                         type="number"
                         value={formData.age}
                         onChange={(e) => setFormData({...formData, age: e.target.value})}
-                        placeholder="อายุ"
+                        placeholder="เช่น 20"
                       />
                     </div>
 
                     {/* Student Fields */}
-                    {(formData.participant_type === "spu_student" || formData.participant_type === "student") && (
+                    {(formData.participant_type === "student" || formData.participant_type === "spu_student") && (
                       <>
                         <div>
                           <Label>มหาวิทยาลัย</Label>
@@ -490,14 +494,6 @@ const EventDetail = () => {
                             </Select>
                           </div>
                         </div>
-                        <div>
-                          <Label>สาขา</Label>
-                          <Input 
-                            value={formData.major}
-                            onChange={(e) => setFormData({...formData, major: e.target.value})}
-                            placeholder="สาขาวิชา"
-                          />
-                        </div>
                       </>
                     )}
 
@@ -505,19 +501,19 @@ const EventDetail = () => {
                     {formData.participant_type === "business" && (
                       <>
                         <div>
-                          <Label>ชื่อบริษัท/องค์กร</Label>
+                          <Label>บริษัท/องค์กร</Label>
                           <Input 
                             value={formData.company_name}
                             onChange={(e) => setFormData({...formData, company_name: e.target.value})}
-                            placeholder="ชื่อบริษัท"
+                            placeholder="ชื่อบริษัทหรือองค์กร"
                           />
                         </div>
                         <div>
-                          <Label>ตำแหน่งงาน</Label>
+                          <Label>ตำแหน่ง</Label>
                           <Input 
                             value={formData.job_title}
                             onChange={(e) => setFormData({...formData, job_title: e.target.value})}
-                            placeholder="ตำแหน่ง"
+                            placeholder="ตำแหน่งงาน"
                           />
                         </div>
                       </>
@@ -528,12 +524,17 @@ const EventDetail = () => {
                       <Textarea 
                         value={formData.notes}
                         onChange={(e) => setFormData({...formData, notes: e.target.value})}
-                        placeholder="ข้อมูลเพิ่มเติมที่ต้องการแจ้ง"
+                        placeholder="ข้อมูลเพิ่มเติม หรือข้อจำกัดพิเศษ"
                         rows={3}
                       />
                     </div>
 
-                    <Button type="submit" className="w-full" size="lg" disabled={submitting}>
+                    <Button 
+                      type="submit" 
+                      className="w-full" 
+                      size="lg"
+                      disabled={submitting}
+                    >
                       {submitting ? "กำลังลงทะเบียน..." : "ลงทะเบียนเข้าร่วม"}
                     </Button>
                   </form>

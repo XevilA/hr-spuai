@@ -322,6 +322,7 @@ export type Database = {
           max_participants: number | null
           registration_deadline: string | null
           short_description: string | null
+          slug: string | null
           tags: string[] | null
           target_audience: string[] | null
           title: string
@@ -344,6 +345,7 @@ export type Database = {
           max_participants?: number | null
           registration_deadline?: string | null
           short_description?: string | null
+          slug?: string | null
           tags?: string[] | null
           target_audience?: string[] | null
           title: string
@@ -366,6 +368,7 @@ export type Database = {
           max_participants?: number | null
           registration_deadline?: string | null
           short_description?: string | null
+          slug?: string | null
           tags?: string[] | null
           target_audience?: string[] | null
           title?: string
