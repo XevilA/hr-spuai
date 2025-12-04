@@ -15,6 +15,7 @@ import Teams from "./pages/Teams";
 import Community from "./pages/Community";
 import Events from "./pages/Events";
 import EventDetail from "./pages/EventDetail";
+import EventCheckIn from "./pages/EventCheckIn";
 import Hidden from "./pages/Hidden";
 import NotFound from "./pages/NotFound";
 
@@ -39,6 +40,7 @@ const App = () => (
           <Route path="/community" element={<Community />} />
           <Route path="/events" element={<Events />} />
           <Route path="/events/:id" element={<EventDetail />} />
+          <Route path="/check-in/:token" element={<EventCheckIn />} />
           <Route path="/hidden" element={<Hidden />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

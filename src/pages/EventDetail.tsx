@@ -54,6 +54,7 @@ const EventDetail = () => {
   const [registrationCount, setRegistrationCount] = useState(0);
   const [submitting, setSubmitting] = useState(false);
   const [registered, setRegistered] = useState(false);
+  const [registrationData, setRegistrationData] = useState<{ id: string; check_in_token: string } | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -121,7 +122,7 @@ const EventDetail = () => {
 
     setSubmitting(true);
     try {
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from("event_registrations")
         .insert({
           event_id: id,
@@ -138,10 +139,13 @@ const EventDetail = () => {
           job_title: formData.job_title || null,
           dietary_requirements: formData.dietary_requirements || null,
           notes: formData.notes || null
-        });
+        })
+        .select("id, check_in_token")
+        .single();
 
       if (error) throw error;
 
+      setRegistrationData(data);
       setRegistered(true);
       toast.success("ลงทะเบียนสำเร็จ!");
     } catch (error: any) {
@@ -343,12 +347,32 @@ const EventDetail = () => {
               </CardHeader>
               <CardContent>
                 {registered ? (
-                  <div className="text-center py-8">
+                  <div className="text-center py-6">
                     <CheckCircle2 className="w-16 h-16 text-green-500 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold mb-2">ลงทะเบียนสำเร็จ!</h3>
-                    <p className="text-muted-foreground">
+                    <p className="text-muted-foreground mb-4">
                       ขอบคุณที่ลงทะเบียน เราจะส่งข้อมูลเพิ่มเติมไปยังอีเมลของคุณ
                     </p>
+                    
+                    {/* QR Code Section */}
+                    {registrationData?.check_in_token && (
+                      <div className="mt-6 p-4 bg-muted/50 rounded-lg">
+                        <h4 className="font-medium mb-3">🎫 QR Code สำหรับ Check-in</h4>
+                        <p className="text-sm text-muted-foreground mb-4">
+                          บันทึกหรือแคปเจอร์ QR Code นี้ แสดงเพื่อเช็คอินเข้างาน
+                        </p>
+                        <div className="bg-white p-4 rounded-lg inline-block">
+                          <img 
+                            src={`https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(`${window.location.origin}/check-in/${registrationData.check_in_token}`)}`}
+                            alt="Check-in QR Code"
+                            className="mx-auto"
+                          />
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-3">
+                          หรือใช้ลิงก์: <a href={`/check-in/${registrationData.check_in_token}`} className="text-primary underline">{`${window.location.origin}/check-in/${registrationData.check_in_token}`}</a>
+                        </p>
+                      </div>
+                    )}
                   </div>
                 ) : !isRegistrationOpen ? (
                   <div className="text-center py-8">
