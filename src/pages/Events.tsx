@@ -193,7 +193,6 @@ const Events = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>("all");
   const heroRef = useRef<HTMLDivElement>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
   
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -246,18 +245,12 @@ const Events = () => {
           style={{ y: heroY, scale: heroScale }}
           className="absolute inset-0"
         >
-          {/* Video Background */}
-          <video
-            ref={videoRef}
-            autoPlay
-            loop
-            muted
-            playsInline
+          {/* GIF Background */}
+          <img
+            src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTJyaGFvZjYxa2ZtdnhteTNqbWc5emZmOGY0aDl3cnk4MmxzdTBkbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tdC6N1RKNp4swre2JY/giphy.gif"
+            alt="AI Animation"
             className="w-full h-full object-cover"
-            poster="/placeholder.svg"
-          >
-            <source src="https://assets.mixkit.co/videos/preview/mixkit-digital-animation-of-futuristic-devices-99786-large.mp4" type="video/mp4" />
-          </video>
+          />
 
           {/* Gradient Overlays */}
           <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
