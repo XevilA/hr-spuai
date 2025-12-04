@@ -13,6 +13,8 @@ import TrackApplication from "./pages/TrackApplication";
 import Team from "./pages/Team";
 import Teams from "./pages/Teams";
 import Community from "./pages/Community";
+import Events from "./pages/Events";
+import EventDetail from "./pages/EventDetail";
 import Hidden from "./pages/Hidden";
 import NotFound from "./pages/NotFound";
 
@@ -35,6 +37,8 @@ const App = () => (
           <Route path="/team" element={<Team />} />
           <Route path="/teams" element={<Teams />} />
           <Route path="/community" element={<Community />} />
+          <Route path="/events" element={<Events />} />
+          <Route path="/events/:id" element={<EventDetail />} />
           <Route path="/hidden" element={<Hidden />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
