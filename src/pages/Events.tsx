@@ -239,7 +239,7 @@ const Events = () => {
       {/* Hero Section - Apple Style */}
       <motion.section 
         ref={heroRef}
-        className="relative h-screen overflow-hidden"
+        className="relative h-screen overflow-hidden bg-black"
       >
         <motion.div 
           style={{ y: heroY, scale: heroScale }}
@@ -249,13 +249,12 @@ const Events = () => {
           <img
             src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExZTJyaGFvZjYxa2ZtdnhteTNqbWc5emZmOGY0aDl3cnk4MmxzdTBkbyZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/tdC6N1RKNp4swre2JY/giphy.gif"
             alt="AI Animation"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover opacity-40"
           />
 
-          {/* Gradient Overlays - Dark */}
-          <div className="absolute inset-0 bg-black/70" />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/5" />
+          {/* Dark Overlay */}
+          <div className="absolute inset-0 bg-black/60" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-black/80 to-black" />
         </motion.div>
 
         <motion.div 
@@ -268,7 +267,7 @@ const Events = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
           >
-            <Badge className="mb-8 px-6 py-2.5 text-sm bg-primary/10 text-primary border border-primary/20 backdrop-blur-sm rounded-full">
+            <Badge className="mb-8 px-6 py-2.5 text-sm bg-white/10 text-white border border-white/20 backdrop-blur-sm rounded-full">
               <Sparkles className="w-4 h-4 mr-2" />
               SPU AI CLUB Events
             </Badge>
@@ -281,11 +280,11 @@ const Events = () => {
             transition={{ duration: 1, delay: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
             className="text-6xl md:text-8xl lg:text-9xl font-bold mb-8 tracking-tight"
           >
-            <span className="bg-clip-text text-transparent bg-gradient-to-b from-foreground to-foreground/70">
+            <span className="text-white">
               Upcoming
             </span>
             <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-primary/70">
+            <span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 via-rose-400 to-orange-400">
               Events
             </span>
           </motion.h1>
@@ -295,7 +294,7 @@ const Events = () => {
             initial={{ opacity: 0, y: 40 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
-            className="text-xl md:text-2xl text-muted-foreground max-w-2xl mb-12 font-light leading-relaxed"
+            className="text-xl md:text-2xl text-white/70 max-w-2xl mb-12 font-light leading-relaxed"
           >
             ร่วมเรียนรู้และพัฒนาทักษะ AI ไปกับกิจกรรมสุดพิเศษ
             <br className="hidden md:block" />
@@ -310,7 +309,7 @@ const Events = () => {
           >
             <Button 
               size="lg" 
-              className="px-10 py-6 text-lg rounded-full bg-primary hover:bg-primary/90 shadow-lg shadow-primary/30"
+              className="px-10 py-6 text-lg rounded-full bg-gradient-to-r from-pink-500 to-orange-500 hover:from-pink-600 hover:to-orange-600 text-white shadow-lg shadow-pink-500/30 border-0"
               onClick={() => {
                 document.getElementById('events-grid')?.scrollIntoView({ behavior: 'smooth' });
               }}
@@ -330,7 +329,7 @@ const Events = () => {
             <motion.div
               animate={{ y: [0, 12, 0] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="flex flex-col items-center gap-2 text-muted-foreground/60"
+              className="flex flex-col items-center gap-2 text-white/40"
             >
               <span className="text-xs uppercase tracking-widest">Scroll</span>
               <ChevronDown className="w-5 h-5" />
