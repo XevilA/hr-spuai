@@ -31,7 +31,10 @@ import {
   Mail,
   Send,
   QrCode,
-  CheckCircle2
+  CheckCircle2,
+  XCircle,
+  UserCheck,
+  RefreshCw
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
@@ -79,6 +82,11 @@ interface Registration {
   created_at: string;
 }
 
+interface EventWithCount extends Event {
+  registration_count: number;
+  checked_in_count: number;
+}
+
 const eventTypes = [
   { value: "workshop", label: "Workshop" },
   { value: "hackathon", label: "Hackathon" },
@@ -104,7 +112,7 @@ const formTypes = [
 ];
 
 export const EventsManager = () => {
-  const [events, setEvents] = useState<Event[]>([]);
+  const [events, setEvents] = useState<EventWithCount[]>([]);
   const [registrations, setRegistrations] = useState<Registration[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -112,6 +120,7 @@ export const EventsManager = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [uploading, setUploading] = useState(false);
+  const [activeTab, setActiveTab] = useState("events");
   
   // Email state
   const [emailDialogOpen, setEmailDialogOpen] = useState(false);
@@ -120,6 +129,9 @@ export const EventsManager = () => {
   const [includeQR, setIncludeQR] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
+  
+  // Check-in state
+  const [checkingIn, setCheckingIn] = useState<string | null>(null);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -146,24 +158,44 @@ export const EventsManager = () => {
   });
 
   useEffect(() => {
-    fetchEvents();
+    fetchEventsWithCounts();
   }, []);
 
   useEffect(() => {
     if (selectedEventId) {
       fetchRegistrations(selectedEventId);
+      setActiveTab("registrations");
     }
   }, [selectedEventId]);
 
-  const fetchEvents = async () => {
+  const fetchEventsWithCounts = async () => {
     try {
-      const { data, error } = await supabase
+      // Fetch events
+      const { data: eventsData, error: eventsError } = await supabase
         .from("events")
         .select("*")
         .order("event_date", { ascending: false });
 
-      if (error) throw error;
-      setEvents(data || []);
+      if (eventsError) throw eventsError;
+
+      // Fetch registration counts for all events
+      const { data: regData, error: regError } = await supabase
+        .from("event_registrations")
+        .select("event_id, checked_in_at");
+
+      if (regError) throw regError;
+
+      // Calculate counts
+      const eventsWithCounts: EventWithCount[] = (eventsData || []).map(event => {
+        const eventRegs = (regData || []).filter(r => r.event_id === event.id);
+        return {
+          ...event,
+          registration_count: eventRegs.length,
+          checked_in_count: eventRegs.filter(r => r.checked_in_at).length
+        };
+      });
+
+      setEvents(eventsWithCounts);
     } catch (error: any) {
       console.error("Error fetching events:", error);
       toast.error("ไม่สามารถโหลดข้อมูลกิจกรรมได้");
@@ -185,6 +217,66 @@ export const EventsManager = () => {
     } catch (error: any) {
       console.error("Error fetching registrations:", error);
       toast.error("ไม่สามารถโหลดข้อมูลการลงทะเบียนได้");
+    }
+  };
+
+  const handleCheckIn = async (registration: Registration) => {
+    if (registration.checked_in_at) {
+      toast.info("ผู้เข้าร่วมนี้ check-in แล้ว");
+      return;
+    }
+    
+    setCheckingIn(registration.id);
+    try {
+      const { error } = await supabase
+        .from("event_registrations")
+        .update({
+          checked_in_at: new Date().toISOString(),
+          status: "checked_in"
+        })
+        .eq("id", registration.id);
+
+      if (error) throw error;
+
+      toast.success(`${registration.full_name} เช็คอินสำเร็จ!`);
+      
+      // Refresh data
+      if (selectedEventId) {
+        fetchRegistrations(selectedEventId);
+        fetchEventsWithCounts();
+      }
+    } catch (error: any) {
+      console.error("Check-in error:", error);
+      toast.error("เกิดข้อผิดพลาดในการ check-in");
+    } finally {
+      setCheckingIn(null);
+    }
+  };
+
+  const handleUndoCheckIn = async (registration: Registration) => {
+    setCheckingIn(registration.id);
+    try {
+      const { error } = await supabase
+        .from("event_registrations")
+        .update({
+          checked_in_at: null,
+          status: "registered"
+        })
+        .eq("id", registration.id);
+
+      if (error) throw error;
+
+      toast.success(`ยกเลิก check-in ${registration.full_name} สำเร็จ`);
+      
+      if (selectedEventId) {
+        fetchRegistrations(selectedEventId);
+        fetchEventsWithCounts();
+      }
+    } catch (error: any) {
+      console.error("Undo check-in error:", error);
+      toast.error("เกิดข้อผิดพลาด");
+    } finally {
+      setCheckingIn(null);
     }
   };
 
@@ -315,7 +407,7 @@ export const EventsManager = () => {
 
       setDialogOpen(false);
       resetForm();
-      fetchEvents();
+      fetchEventsWithCounts();
     } catch (error: any) {
       console.error("Error saving event:", error);
       toast.error("เกิดข้อผิดพลาด: " + error.message);
@@ -331,7 +423,7 @@ export const EventsManager = () => {
 
       if (error) throw error;
       toast.success("ลบกิจกรรมสำเร็จ!");
-      fetchEvents();
+      fetchEventsWithCounts();
     } catch (error: any) {
       console.error("Error deleting event:", error);
       toast.error("ไม่สามารถลบกิจกรรมได้");
@@ -356,7 +448,7 @@ export const EventsManager = () => {
     }
 
     const csvContent = [
-      ["ชื่อ", "อีเมล", "เบอร์โทร", "อายุ", "ประเภท", "มหาวิทยาลัย", "คณะ", "ปี", "บริษัท", "ตำแหน่ง", "สถานะ", "วันที่ลงทะเบียน"].join(","),
+      ["ชื่อ", "อีเมล", "เบอร์โทร", "อายุ", "ประเภท", "มหาวิทยาลัย", "คณะ", "ปี", "บริษัท", "ตำแหน่ง", "สถานะ", "Check-in", "วันที่ลงทะเบียน"].join(","),
       ...registrations.map(r => [
         r.full_name,
         r.email,
@@ -369,6 +461,7 @@ export const EventsManager = () => {
         r.company_name || "",
         r.job_title || "",
         r.status,
+        r.checked_in_at ? format(new Date(r.checked_in_at), "dd/MM/yyyy HH:mm") : "-",
         format(new Date(r.created_at), "dd/MM/yyyy HH:mm")
       ].join(","))
     ].join("\n");
@@ -381,26 +474,64 @@ export const EventsManager = () => {
     toast.success("Export สำเร็จ!");
   };
 
+  const handleSendEmail = async () => {
+    if (!emailSubject || !emailMessage) {
+      toast.error("กรุณากรอกหัวข้อและเนื้อหา");
+      return;
+    }
+    
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-event-email", {
+        body: {
+          event_id: selectedEventId,
+          subject: emailSubject,
+          message: emailMessage,
+          recipient_ids: selectedRegistrations.length > 0 ? selectedRegistrations : undefined,
+          include_qr: includeQR
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(`ส่งอีเมลสำเร็จ ${data.sent} ฉบับ!`);
+      if (data.failed > 0) {
+        toast.warning(`ส่งไม่สำเร็จ ${data.failed} ฉบับ`);
+      }
+      setEmailDialogOpen(false);
+      setEmailSubject("");
+      setEmailMessage("");
+      setSelectedRegistrations([]);
+    } catch (error: any) {
+      console.error("Email error:", error);
+      toast.error("เกิดข้อผิดพลาดในการส่งอีเมล");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
   const filteredEvents = events.filter(event =>
     event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     event.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const selectedEvent = events.find(e => e.id === selectedEventId);
+
   return (
     <div className="space-y-6">
-      <Tabs defaultValue="events">
-        <TabsList>
-          <TabsTrigger value="events">
-            <Calendar className="w-4 h-4 mr-2" />
-            กิจกรรมทั้งหมด
+      <Tabs value={activeTab} onValueChange={setActiveTab}>
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="events" className="flex items-center gap-2">
+            <Calendar className="w-4 h-4" />
+            กิจกรรมทั้งหมด ({events.length})
           </TabsTrigger>
-          <TabsTrigger value="registrations" disabled={!selectedEventId}>
-            <Users className="w-4 h-4 mr-2" />
+          <TabsTrigger value="registrations" disabled={!selectedEventId} className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
             ผู้ลงทะเบียน {selectedEventId && `(${registrations.length})`}
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="events" className="space-y-4">
+        <TabsContent value="events" className="space-y-4 mt-6">
           <div className="flex flex-col sm:flex-row gap-4 justify-between">
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -417,14 +548,14 @@ export const EventsManager = () => {
               if (!open) resetForm();
             }}>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="bg-primary hover:bg-primary/90">
                   <Plus className="w-4 h-4 mr-2" />
                   เพิ่มกิจกรรม
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>
+                  <DialogTitle className="text-xl">
                     {editingEvent ? "แก้ไขกิจกรรม" : "สร้างกิจกรรมใหม่"}
                   </DialogTitle>
                   <DialogDescription>
@@ -705,7 +836,7 @@ export const EventsManager = () => {
             </Dialog>
           </div>
 
-          {/* Events Table */}
+          {/* Events Grid */}
           {loading ? (
             <div className="text-center py-10">
               <Loader2 className="w-8 h-8 animate-spin mx-auto text-primary" />
@@ -718,74 +849,86 @@ export const EventsManager = () => {
               </CardContent>
             </Card>
           ) : (
-            <div className="rounded-lg border overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>กิจกรรม</TableHead>
-                    <TableHead>ประเภท</TableHead>
-                    <TableHead>วันที่</TableHead>
-                    <TableHead>ผู้ลงทะเบียน</TableHead>
-                    <TableHead>สถานะ</TableHead>
-                    <TableHead className="text-right">จัดการ</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredEvents.map((event) => (
-                    <TableRow key={event.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-3">
-                          {event.image_url ? (
-                            <img
-                              src={event.image_url}
-                              alt={event.title}
-                              className="w-12 h-12 rounded object-cover"
-                            />
-                          ) : (
-                            <div className="w-12 h-12 bg-muted rounded flex items-center justify-center">
-                              <Calendar className="w-6 h-6 text-muted-foreground" />
-                            </div>
-                          )}
-                          <div>
-                            <p className="font-medium">{event.title}</p>
+            <div className="grid gap-4">
+              {filteredEvents.map((event) => (
+                <Card key={event.id} className="overflow-hidden hover:shadow-md transition-shadow">
+                  <div className="flex flex-col md:flex-row">
+                    {/* Image */}
+                    <div className="md:w-48 h-32 md:h-auto flex-shrink-0">
+                      {event.image_url ? (
+                        <img
+                          src={event.image_url}
+                          alt={event.title}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/10 to-primary/5 flex items-center justify-center">
+                          <Calendar className="w-10 h-10 text-primary/30" />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 p-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-semibold text-lg">{event.title}</h3>
                             {event.is_featured && (
-                              <Badge variant="secondary" className="text-xs">
+                              <Badge className="bg-primary/10 text-primary text-xs">
                                 <Sparkles className="w-3 h-3 mr-1" />
                                 แนะนำ
                               </Badge>
                             )}
                           </div>
+                          
+                          <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-2">
+                            <div className="flex items-center gap-1">
+                              <Calendar className="w-4 h-4" />
+                              {format(new Date(event.event_date), "d MMM yyyy HH:mm น.", { locale: th })}
+                            </div>
+                            {event.location && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                {event.location}
+                              </div>
+                            )}
+                            <Badge variant="outline" className="text-xs">
+                              {eventTypes.find(t => t.value === event.event_type)?.label || event.event_type}
+                            </Badge>
+                          </div>
+
+                          {/* Stats */}
+                          <div className="flex items-center gap-4">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 px-2 text-muted-foreground hover:text-primary"
+                              onClick={() => setSelectedEventId(event.id)}
+                            >
+                              <Users className="w-4 h-4 mr-1" />
+                              <span className="font-medium">
+                                {event.registration_count}
+                                {event.max_participants ? `/${event.max_participants}` : ""} ลงทะเบียน
+                              </span>
+                            </Button>
+                            <div className="flex items-center gap-1 text-sm text-green-600">
+                              <UserCheck className="w-4 h-4" />
+                              <span>{event.checked_in_count} เช็คอิน</span>
+                            </div>
+                            <Badge variant={event.is_active ? "default" : "secondary"} className="text-xs">
+                              {event.is_active ? "เปิด" : "ปิด"}
+                            </Badge>
+                          </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {eventTypes.find(t => t.value === event.event_type)?.label || event.event_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        {format(new Date(event.event_date), "d MMM yyyy", { locale: th })}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => setSelectedEventId(event.id)}
-                        >
-                          <Users className="w-4 h-4 mr-1" />
-                          {event.max_participants ? `0/${event.max_participants}` : "-"}
-                        </Button>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant={event.is_active ? "default" : "secondary"}>
-                          {event.is_active ? "เปิด" : "ปิด"}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+
+                        {/* Actions */}
+                        <div className="flex items-center gap-1">
                           <Button
                             variant="ghost"
                             size="icon"
                             onClick={() => window.open(`/events/${event.id}`, '_blank')}
+                            title="ดูตัวอย่าง"
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
@@ -793,12 +936,28 @@ export const EventsManager = () => {
                             variant="ghost"
                             size="icon"
                             onClick={() => openEditDialog(event)}
+                            title="แก้ไข"
                           >
                             <Pencil className="w-4 h-4" />
                           </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="text-primary"
+                            onClick={() => {
+                              setSelectedEventId(event.id);
+                              setEmailSubject(`[${event.title}] `);
+                              setEmailMessage("");
+                              setSelectedRegistrations([]);
+                              setEmailDialogOpen(true);
+                            }}
+                            title="ส่งอีเมล"
+                          >
+                            <Mail className="w-4 h-4" />
+                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon">
+                              <Button variant="ghost" size="icon" title="ลบ">
                                 <Trash2 className="w-4 h-4 text-destructive" />
                               </Button>
                             </AlertDialogTrigger>
@@ -818,47 +977,80 @@ export const EventsManager = () => {
                             </AlertDialogContent>
                           </AlertDialog>
                         </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
           )}
         </TabsContent>
 
-        <TabsContent value="registrations" className="space-y-4">
+        <TabsContent value="registrations" className="space-y-4 mt-6">
           {selectedEventId && (
             <>
-              <div className="flex flex-col sm:flex-row gap-4 justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold">
-                    ผู้ลงทะเบียน - {events.find(e => e.id === selectedEventId)?.title}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    ทั้งหมด {registrations.length} คน | เช็คอินแล้ว {registrations.filter(r => r.checked_in_at).length} คน
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => {
-                      setEmailSubject(`[${events.find(e => e.id === selectedEventId)?.title}] `);
-                      setEmailMessage("");
-                      setSelectedRegistrations([]);
-                      setEmailDialogOpen(true);
-                    }}
-                    disabled={registrations.length === 0}
-                  >
-                    <Mail className="w-4 h-4 mr-2" />
-                    ส่งอีเมล
-                  </Button>
-                  <Button variant="outline" onClick={exportRegistrations}>
-                    <Download className="w-4 h-4 mr-2" />
-                    Export CSV
-                  </Button>
-                </div>
-              </div>
+              {/* Header */}
+              <Card className="bg-gradient-to-r from-primary/5 to-primary/10 border-primary/20">
+                <CardContent className="p-4">
+                  <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                      <h3 className="text-lg font-bold text-primary">
+                        {selectedEvent?.title}
+                      </h3>
+                      <div className="flex flex-wrap items-center gap-4 mt-2 text-sm">
+                        <div className="flex items-center gap-2 px-3 py-1 bg-background rounded-full">
+                          <Users className="w-4 h-4 text-muted-foreground" />
+                          <span className="font-medium">{registrations.length}</span>
+                          <span className="text-muted-foreground">ลงทะเบียน</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-full">
+                          <CheckCircle2 className="w-4 h-4" />
+                          <span className="font-medium">{registrations.filter(r => r.checked_in_at).length}</span>
+                          <span>เช็คอินแล้ว</span>
+                        </div>
+                        <div className="flex items-center gap-2 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400 rounded-full">
+                          <XCircle className="w-4 h-4" />
+                          <span className="font-medium">{registrations.filter(r => !r.checked_in_at).length}</span>
+                          <span>รอเช็คอิน</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => {
+                          if (selectedEventId) {
+                            fetchRegistrations(selectedEventId);
+                            fetchEventsWithCounts();
+                          }
+                        }}
+                      >
+                        <RefreshCw className="w-4 h-4 mr-2" />
+                        รีเฟรช
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setEmailSubject(`[${selectedEvent?.title}] `);
+                          setEmailMessage("");
+                          setSelectedRegistrations([]);
+                          setEmailDialogOpen(true);
+                        }}
+                        disabled={registrations.length === 0}
+                      >
+                        <Mail className="w-4 h-4 mr-2" />
+                        ส่งอีเมล
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={exportRegistrations}>
+                        <Download className="w-4 h-4 mr-2" />
+                        Export CSV
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
 
               {registrations.length === 0 ? (
                 <Card>
@@ -871,10 +1063,10 @@ export const EventsManager = () => {
                 <div className="rounded-lg border overflow-hidden">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="bg-muted/50">
                         <TableHead className="w-10">
                           <Checkbox
-                            checked={selectedRegistrations.length === registrations.length}
+                            checked={selectedRegistrations.length === registrations.length && registrations.length > 0}
                             onCheckedChange={(checked) => {
                               if (checked) {
                                 setSelectedRegistrations(registrations.map(r => r.id));
@@ -884,17 +1076,20 @@ export const EventsManager = () => {
                             }}
                           />
                         </TableHead>
-                        <TableHead>ชื่อ</TableHead>
-                        <TableHead>อีเมล</TableHead>
+                        <TableHead>ผู้ลงทะเบียน</TableHead>
                         <TableHead>ประเภท</TableHead>
                         <TableHead>สังกัด</TableHead>
-                        <TableHead>Check-in</TableHead>
-                        <TableHead>สถานะ</TableHead>
+                        <TableHead>เบอร์โทร</TableHead>
+                        <TableHead className="text-center">Check-in</TableHead>
+                        <TableHead className="text-right">จัดการ</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {registrations.map((reg) => (
-                        <TableRow key={reg.id}>
+                        <TableRow 
+                          key={reg.id}
+                          className={reg.checked_in_at ? "bg-green-50/50 dark:bg-green-900/10" : ""}
+                        >
                           <TableCell>
                             <Checkbox
                               checked={selectedRegistrations.includes(reg.id)}
@@ -907,34 +1102,77 @@ export const EventsManager = () => {
                               }}
                             />
                           </TableCell>
-                          <TableCell className="font-medium">{reg.full_name}</TableCell>
-                          <TableCell>{reg.email}</TableCell>
                           <TableCell>
-                            <Badge variant="outline">
+                            <div>
+                              <p className="font-medium">{reg.full_name}</p>
+                              <p className="text-xs text-muted-foreground">{reg.email}</p>
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-xs">
                               {reg.participant_type === "spu_student" ? "นศ. SPU" :
                                reg.participant_type === "student" ? "นักศึกษา" :
                                reg.participant_type === "business" ? "ธุรกิจ" : "ทั่วไป"}
                             </Badge>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-sm">
                             {reg.university || reg.company_name || "-"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="text-sm">
+                            {reg.phone || "-"}
+                          </TableCell>
+                          <TableCell className="text-center">
                             {reg.checked_in_at ? (
-                              <div className="flex items-center gap-1 text-green-600">
-                                <CheckCircle2 className="w-4 h-4" />
-                                <span className="text-xs">
-                                  {format(new Date(reg.checked_in_at), "HH:mm")}
+                              <div className="flex flex-col items-center">
+                                <div className="flex items-center gap-1 text-green-600">
+                                  <CheckCircle2 className="w-5 h-5" />
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  {format(new Date(reg.checked_in_at), "HH:mm น.")}
                                 </span>
                               </div>
                             ) : (
-                              <Badge variant="outline" className="text-xs">รอ Check-in</Badge>
+                              <Badge variant="outline" className="text-xs">
+                                รอ Check-in
+                              </Badge>
                             )}
                           </TableCell>
-                          <TableCell>
-                            <Badge variant={reg.status === "checked_in" ? "default" : reg.status === "registered" ? "secondary" : "outline"}>
-                              {reg.status === "checked_in" ? "เช็คอินแล้ว" : reg.status}
-                            </Badge>
+                          <TableCell className="text-right">
+                            {reg.checked_in_at ? (
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleUndoCheckIn(reg)}
+                                disabled={checkingIn === reg.id}
+                                className="text-orange-600 hover:text-orange-700 hover:bg-orange-50"
+                              >
+                                {checkingIn === reg.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <XCircle className="w-4 h-4 mr-1" />
+                                    ยกเลิก
+                                  </>
+                                )}
+                              </Button>
+                            ) : (
+                              <Button
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleCheckIn(reg)}
+                                disabled={checkingIn === reg.id}
+                                className="bg-green-600 hover:bg-green-700"
+                              >
+                                {checkingIn === reg.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    <UserCheck className="w-4 h-4 mr-1" />
+                                    Check-in
+                                  </>
+                                )}
+                              </Button>
+                            )}
                           </TableCell>
                         </TableRow>
                       ))}
@@ -942,113 +1180,88 @@ export const EventsManager = () => {
                   </Table>
                 </div>
               )}
-
-              {/* Email Dialog */}
-              <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
-                <DialogContent className="max-w-2xl">
-                  <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                      <Mail className="w-5 h-5" />
-                      ส่งอีเมลถึงผู้ลงทะเบียน
-                    </DialogTitle>
-                    <DialogDescription>
-                      {selectedRegistrations.length > 0 
-                        ? `ส่งถึง ${selectedRegistrations.length} คนที่เลือก`
-                        : `ส่งถึงทั้งหมด ${registrations.length} คน`}
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="space-y-4">
-                    <div>
-                      <Label>หัวข้ออีเมล</Label>
-                      <Input
-                        value={emailSubject}
-                        onChange={(e) => setEmailSubject(e.target.value)}
-                        placeholder="เช่น: ยืนยันการลงทะเบียน AI Hackathon"
-                      />
-                    </div>
-
-                    <div>
-                      <Label>เนื้อหาอีเมล</Label>
-                      <Textarea
-                        value={emailMessage}
-                        onChange={(e) => setEmailMessage(e.target.value)}
-                        placeholder="เขียนข้อความที่ต้องการส่งถึงผู้ลงทะเบียน..."
-                        rows={8}
-                      />
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="include-qr"
-                        checked={includeQR}
-                        onCheckedChange={setIncludeQR}
-                      />
-                      <Label htmlFor="include-qr" className="flex items-center gap-2">
-                        <QrCode className="w-4 h-4" />
-                        แนบ QR Code สำหรับ Check-in
-                      </Label>
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
-                      ยกเลิก
-                    </Button>
-                    <Button 
-                      onClick={async () => {
-                        if (!emailSubject || !emailMessage) {
-                          toast.error("กรุณากรอกหัวข้อและเนื้อหา");
-                          return;
-                        }
-                        
-                        setSendingEmail(true);
-                        try {
-                          const { data, error } = await supabase.functions.invoke("send-event-email", {
-                            body: {
-                              event_id: selectedEventId,
-                              subject: emailSubject,
-                              message: emailMessage,
-                              recipient_ids: selectedRegistrations.length > 0 ? selectedRegistrations : undefined,
-                              include_qr: includeQR
-                            }
-                          });
-
-                          if (error) throw error;
-
-                          toast.success(`ส่งอีเมลสำเร็จ ${data.sent} ฉบับ!`);
-                          if (data.failed > 0) {
-                            toast.warning(`ส่งไม่สำเร็จ ${data.failed} ฉบับ`);
-                          }
-                          setEmailDialogOpen(false);
-                        } catch (error: any) {
-                          console.error("Email error:", error);
-                          toast.error("เกิดข้อผิดพลาดในการส่งอีเมล");
-                        } finally {
-                          setSendingEmail(false);
-                        }
-                      }}
-                      disabled={sendingEmail}
-                    >
-                      {sendingEmail ? (
-                        <>
-                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                          กำลังส่ง...
-                        </>
-                      ) : (
-                        <>
-                          <Send className="w-4 h-4 mr-2" />
-                          ส่งอีเมล
-                        </>
-                      )}
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </>
           )}
         </TabsContent>
       </Tabs>
+
+      {/* Email Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Mail className="w-5 h-5 text-primary" />
+              ส่งอีเมลถึงผู้ลงทะเบียน
+            </DialogTitle>
+            <DialogDescription>
+              {selectedRegistrations.length > 0 
+                ? `ส่งถึง ${selectedRegistrations.length} คนที่เลือก`
+                : `ส่งถึงทั้งหมด ${registrations.length} คน`}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label className="text-sm font-medium">หัวข้ออีเมล</Label>
+              <Input
+                value={emailSubject}
+                onChange={(e) => setEmailSubject(e.target.value)}
+                placeholder="เช่น: ยืนยันการลงทะเบียน AI Hackathon"
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <Label className="text-sm font-medium">เนื้อหาอีเมล</Label>
+              <Textarea
+                value={emailMessage}
+                onChange={(e) => setEmailMessage(e.target.value)}
+                placeholder="เขียนข้อความที่ต้องการส่งถึงผู้ลงทะเบียน..."
+                rows={8}
+                className="mt-1.5"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 อีเมลจะถูกจัดรูปแบบให้สวยงามโดยอัตโนมัติ พร้อมข้อมูลกิจกรรมและลิงก์
+              </p>
+            </div>
+
+            <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
+              <Switch
+                id="include-qr"
+                checked={includeQR}
+                onCheckedChange={setIncludeQR}
+              />
+              <Label htmlFor="include-qr" className="flex items-center gap-2 cursor-pointer">
+                <QrCode className="w-4 h-4 text-primary" />
+                <span>แนบ QR Code สำหรับ Check-in</span>
+              </Label>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+              ยกเลิก
+            </Button>
+            <Button 
+              onClick={handleSendEmail}
+              disabled={sendingEmail || !emailSubject || !emailMessage}
+              className="bg-primary"
+            >
+              {sendingEmail ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  กำลังส่ง...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  ส่งอีเมล
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
