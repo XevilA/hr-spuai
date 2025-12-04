@@ -27,8 +27,13 @@ import {
   MapPin,
   Search,
   Download,
-  Loader2
+  Loader2,
+  Mail,
+  Send,
+  QrCode,
+  CheckCircle2
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 
@@ -69,6 +74,8 @@ interface Registration {
   company_name: string | null;
   job_title: string | null;
   status: string;
+  check_in_token: string | null;
+  checked_in_at: string | null;
   created_at: string;
 }
 
@@ -105,6 +112,14 @@ export const EventsManager = () => {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [uploading, setUploading] = useState(false);
+  
+  // Email state
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailSubject, setEmailSubject] = useState("");
+  const [emailMessage, setEmailMessage] = useState("");
+  const [includeQR, setIncludeQR] = useState(true);
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
   
   const imageInputRef = useRef<HTMLInputElement>(null);
   const videoInputRef = useRef<HTMLInputElement>(null);
@@ -815,19 +830,34 @@ export const EventsManager = () => {
         <TabsContent value="registrations" className="space-y-4">
           {selectedEventId && (
             <>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row gap-4 justify-between">
                 <div>
                   <h3 className="text-lg font-semibold">
                     ผู้ลงทะเบียน - {events.find(e => e.id === selectedEventId)?.title}
                   </h3>
                   <p className="text-sm text-muted-foreground">
-                    ทั้งหมด {registrations.length} คน
+                    ทั้งหมด {registrations.length} คน | เช็คอินแล้ว {registrations.filter(r => r.checked_in_at).length} คน
                   </p>
                 </div>
-                <Button variant="outline" onClick={exportRegistrations}>
-                  <Download className="w-4 h-4 mr-2" />
-                  Export CSV
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setEmailSubject(`[${events.find(e => e.id === selectedEventId)?.title}] `);
+                      setEmailMessage("");
+                      setSelectedRegistrations([]);
+                      setEmailDialogOpen(true);
+                    }}
+                    disabled={registrations.length === 0}
+                  >
+                    <Mail className="w-4 h-4 mr-2" />
+                    ส่งอีเมล
+                  </Button>
+                  <Button variant="outline" onClick={exportRegistrations}>
+                    <Download className="w-4 h-4 mr-2" />
+                    Export CSV
+                  </Button>
+                </div>
               </div>
 
               {registrations.length === 0 ? (
@@ -842,17 +872,41 @@ export const EventsManager = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10">
+                          <Checkbox
+                            checked={selectedRegistrations.length === registrations.length}
+                            onCheckedChange={(checked) => {
+                              if (checked) {
+                                setSelectedRegistrations(registrations.map(r => r.id));
+                              } else {
+                                setSelectedRegistrations([]);
+                              }
+                            }}
+                          />
+                        </TableHead>
                         <TableHead>ชื่อ</TableHead>
                         <TableHead>อีเมล</TableHead>
                         <TableHead>ประเภท</TableHead>
                         <TableHead>สังกัด</TableHead>
-                        <TableHead>วันที่ลงทะเบียน</TableHead>
+                        <TableHead>Check-in</TableHead>
                         <TableHead>สถานะ</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {registrations.map((reg) => (
                         <TableRow key={reg.id}>
+                          <TableCell>
+                            <Checkbox
+                              checked={selectedRegistrations.includes(reg.id)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedRegistrations([...selectedRegistrations, reg.id]);
+                                } else {
+                                  setSelectedRegistrations(selectedRegistrations.filter(id => id !== reg.id));
+                                }
+                              }}
+                            />
+                          </TableCell>
                           <TableCell className="font-medium">{reg.full_name}</TableCell>
                           <TableCell>{reg.email}</TableCell>
                           <TableCell>
@@ -866,11 +920,20 @@ export const EventsManager = () => {
                             {reg.university || reg.company_name || "-"}
                           </TableCell>
                           <TableCell>
-                            {format(new Date(reg.created_at), "d MMM yyyy HH:mm", { locale: th })}
+                            {reg.checked_in_at ? (
+                              <div className="flex items-center gap-1 text-green-600">
+                                <CheckCircle2 className="w-4 h-4" />
+                                <span className="text-xs">
+                                  {format(new Date(reg.checked_in_at), "HH:mm")}
+                                </span>
+                              </div>
+                            ) : (
+                              <Badge variant="outline" className="text-xs">รอ Check-in</Badge>
+                            )}
                           </TableCell>
                           <TableCell>
-                            <Badge variant={reg.status === "registered" ? "default" : "secondary"}>
-                              {reg.status}
+                            <Badge variant={reg.status === "checked_in" ? "default" : reg.status === "registered" ? "secondary" : "outline"}>
+                              {reg.status === "checked_in" ? "เช็คอินแล้ว" : reg.status}
                             </Badge>
                           </TableCell>
                         </TableRow>
@@ -879,6 +942,109 @@ export const EventsManager = () => {
                   </Table>
                 </div>
               )}
+
+              {/* Email Dialog */}
+              <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                      <Mail className="w-5 h-5" />
+                      ส่งอีเมลถึงผู้ลงทะเบียน
+                    </DialogTitle>
+                    <DialogDescription>
+                      {selectedRegistrations.length > 0 
+                        ? `ส่งถึง ${selectedRegistrations.length} คนที่เลือก`
+                        : `ส่งถึงทั้งหมด ${registrations.length} คน`}
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="space-y-4">
+                    <div>
+                      <Label>หัวข้ออีเมล</Label>
+                      <Input
+                        value={emailSubject}
+                        onChange={(e) => setEmailSubject(e.target.value)}
+                        placeholder="เช่น: ยืนยันการลงทะเบียน AI Hackathon"
+                      />
+                    </div>
+
+                    <div>
+                      <Label>เนื้อหาอีเมล</Label>
+                      <Textarea
+                        value={emailMessage}
+                        onChange={(e) => setEmailMessage(e.target.value)}
+                        placeholder="เขียนข้อความที่ต้องการส่งถึงผู้ลงทะเบียน..."
+                        rows={8}
+                      />
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Switch
+                        id="include-qr"
+                        checked={includeQR}
+                        onCheckedChange={setIncludeQR}
+                      />
+                      <Label htmlFor="include-qr" className="flex items-center gap-2">
+                        <QrCode className="w-4 h-4" />
+                        แนบ QR Code สำหรับ Check-in
+                      </Label>
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+                      ยกเลิก
+                    </Button>
+                    <Button 
+                      onClick={async () => {
+                        if (!emailSubject || !emailMessage) {
+                          toast.error("กรุณากรอกหัวข้อและเนื้อหา");
+                          return;
+                        }
+                        
+                        setSendingEmail(true);
+                        try {
+                          const { data, error } = await supabase.functions.invoke("send-event-email", {
+                            body: {
+                              event_id: selectedEventId,
+                              subject: emailSubject,
+                              message: emailMessage,
+                              recipient_ids: selectedRegistrations.length > 0 ? selectedRegistrations : undefined,
+                              include_qr: includeQR
+                            }
+                          });
+
+                          if (error) throw error;
+
+                          toast.success(`ส่งอีเมลสำเร็จ ${data.sent} ฉบับ!`);
+                          if (data.failed > 0) {
+                            toast.warning(`ส่งไม่สำเร็จ ${data.failed} ฉบับ`);
+                          }
+                          setEmailDialogOpen(false);
+                        } catch (error: any) {
+                          console.error("Email error:", error);
+                          toast.error("เกิดข้อผิดพลาดในการส่งอีเมล");
+                        } finally {
+                          setSendingEmail(false);
+                        }
+                      }}
+                      disabled={sendingEmail}
+                    >
+                      {sendingEmail ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          กำลังส่ง...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4 mr-2" />
+                          ส่งอีเมล
+                        </>
+                      )}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </TabsContent>

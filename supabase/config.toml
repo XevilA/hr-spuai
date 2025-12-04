@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.parse-cv]
 verify_jwt = true
+
+[functions.send-event-email]
+verify_jwt = true
+
+[functions.event-check-in]
+verify_jwt = false
