@@ -342,19 +342,19 @@ const Events = () => {
 
       {/* Featured Event */}
       {featuredEvent && (
-        <section className="py-12 sm:py-16 md:py-24 px-4 sm:px-6 relative overflow-hidden">
+        <section className="py-8 sm:py-16 md:py-24 px-0 sm:px-6 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
           
-          <div className="container mx-auto max-w-6xl relative">
+          <div className="sm:container mx-auto sm:max-w-6xl relative">
             <motion.div
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="text-center mb-8 sm:mb-12 md:mb-16"
+              className="text-center mb-6 sm:mb-12 md:mb-16 px-4 sm:px-0"
             >
               <Badge variant="outline" className="mb-3 sm:mb-4 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm">กิจกรรมแนะนำ</Badge>
-              <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight">Featured Event</h2>
+              <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight">Featured Event</h2>
             </motion.div>
 
             <Link to={`/events/${featuredEvent.slug || featuredEvent.id}`}>
@@ -363,11 +363,11 @@ const Events = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="group relative rounded-2xl sm:rounded-[2rem] overflow-hidden bg-card border shadow-2xl"
+                className="group relative rounded-none sm:rounded-[2rem] overflow-hidden bg-card sm:border shadow-2xl"
               >
                 <div className="grid lg:grid-cols-2">
                   {/* Image */}
-                  <div className="relative aspect-[16/10] sm:aspect-video lg:aspect-auto lg:min-h-[400px] xl:min-h-[500px] overflow-hidden">
+                  <div className="relative aspect-[4/3] sm:aspect-video lg:aspect-auto lg:min-h-[400px] xl:min-h-[500px] overflow-hidden">
                     {featuredEvent.image_url ? (
                       <motion.img 
                         src={featuredEvent.image_url}
@@ -398,33 +398,34 @@ const Events = () => {
                   </div>
 
                   {/* Content */}
-                  <div className="p-6 sm:p-8 md:p-10 lg:p-12 xl:p-16 flex flex-col justify-center">
-                    <Badge className="w-fit mb-4 sm:mb-6 bg-primary/10 text-primary border-0 px-3 sm:px-4 py-1 sm:py-1.5 text-xs sm:text-sm">
+                  {/* Content */}
+                  <div className="p-5 sm:p-8 md:p-10 lg:p-12 xl:p-16 flex flex-col justify-center">
+                    <Badge className="w-fit mb-3 sm:mb-6 bg-primary/10 text-primary border-0 px-2.5 sm:px-4 py-0.5 sm:py-1.5 text-[11px] sm:text-sm">
                       {eventTypeLabels[featuredEvent.event_type]}
                     </Badge>
                     
-                    <h3 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-4 sm:mb-6 group-hover:text-primary transition-colors leading-tight">
+                    <h3 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 sm:mb-6 group-hover:text-primary transition-colors leading-tight">
                       {featuredEvent.title}
                     </h3>
                     
-                    <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-6 sm:mb-8 line-clamp-3 leading-relaxed">
+                    <p className="text-muted-foreground text-sm sm:text-base md:text-lg mb-5 sm:mb-8 line-clamp-2 sm:line-clamp-3 leading-relaxed">
                       {featuredEvent.short_description || featuredEvent.description}
                     </p>
 
-                    <div className="flex flex-wrap gap-2 sm:gap-4 mb-6 sm:mb-10 text-muted-foreground text-sm">
-                      <div className="flex items-center gap-1.5 sm:gap-2 bg-muted/50 rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                        <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                        <span>{format(new Date(featuredEvent.event_date), "d MMMM yyyy", { locale: th })}</span>
+                    <div className="flex flex-wrap gap-2 sm:gap-4 mb-5 sm:mb-10 text-muted-foreground text-xs sm:text-sm">
+                      <div className="flex items-center gap-1.5 sm:gap-2 bg-muted/50 rounded-full px-2.5 sm:px-4 py-1 sm:py-2">
+                        <Calendar className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary" />
+                        <span>{format(new Date(featuredEvent.event_date), "d MMM yyyy", { locale: th })}</span>
                       </div>
                       {featuredEvent.location && (
-                        <div className="flex items-center gap-1.5 sm:gap-2 bg-muted/50 rounded-full px-3 sm:px-4 py-1.5 sm:py-2">
-                          <MapPin className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                          <span className="truncate max-w-32 sm:max-w-none">{featuredEvent.location}</span>
+                        <div className="flex items-center gap-1.5 sm:gap-2 bg-muted/50 rounded-full px-2.5 sm:px-4 py-1 sm:py-2">
+                          <MapPin className="w-3.5 h-3.5 sm:w-5 sm:h-5 text-primary" />
+                          <span className="truncate max-w-28 sm:max-w-none">{featuredEvent.location}</span>
                         </div>
                       )}
                     </div>
 
-                    <Button size="lg" className="w-full sm:w-fit px-6 sm:px-8 py-5 sm:py-6 rounded-full group-hover:gap-4 transition-all shadow-lg text-base sm:text-lg">
+                    <Button size="lg" className="w-full sm:w-fit px-5 sm:px-8 py-4 sm:py-6 rounded-full group-hover:gap-4 transition-all shadow-lg text-sm sm:text-lg">
                       ลงทะเบียนเลย
                       <ArrowRight className="ml-2 w-4 h-4 sm:w-5 sm:h-5" />
                     </Button>
