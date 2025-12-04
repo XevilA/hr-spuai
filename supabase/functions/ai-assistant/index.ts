@@ -162,11 +162,14 @@ function getSystemPrompt(action: string): string {
     case 'analyze-application':
       return `คุณเป็น AI ผู้เชี่ยวชาญในการวิเคราะห์ใบสมัครงาน วิเคราะห์ข้อมูลผู้สมัครอย่างละเอียดและให้คำแนะนำที่เป็นประโยชน์
       
+คุณจะได้รับข้อมูลจากใบสมัครและเนื้อหาจากไฟล์ CV (ถ้ามี) ให้วิเคราะห์อย่างครบถ้วน
+
 ให้วิเคราะห์ในหัวข้อต่อไปนี้:
-1. **จุดแข็ง** - ทักษะและความสามารถที่โดดเด่น
+1. **จุดแข็ง** - ทักษะและความสามารถที่โดดเด่นจากใบสมัครและ CV
 2. **ความเหมาะสม** - ความเข้ากันกับตำแหน่งที่สมัคร (0-100%)
 3. **จุดที่ควรพัฒนา** - ข้อเสนอแนะในการพัฒนา
-4. **คำแนะนำ** - ข้อเสนอแนะสำหรับ Admin
+4. **ข้อมูลเด่นจาก CV** - ประสบการณ์ ทักษะ หรือผลงานที่น่าสนใจจาก CV (ถ้ามี)
+5. **คำแนะนำ** - ข้อเสนอแนะสำหรับ Admin รวมถึงคำถามสัมภาษณ์ที่ควรถาม
 
 ตอบเป็นภาษาไทยในรูปแบบ Markdown ที่อ่านง่าย`;
 
@@ -216,10 +219,17 @@ function getSystemPrompt(action: string): string {
 function formatPrompt(action: string, prompt: string, context: any): string {
   switch (action) {
     case 'analyze-application':
+      const cvContent = context?.cv_content;
+      const applicationData = { ...context };
+      delete applicationData.cv_content; // Remove cv_content from main object for cleaner display
+      
       return `วิเคราะห์ใบสมัครต่อไปนี้:
 
 **ข้อมูลผู้สมัคร:**
-${JSON.stringify(context, null, 2)}
+${JSON.stringify(applicationData, null, 2)}
+
+${cvContent && cvContent !== '[ไม่มีไฟล์ CV หรือไม่สามารถอ่านได้]' ? `**เนื้อหาจากไฟล์ CV:**
+${cvContent}` : '*ไม่มีไฟล์ CV หรือไม่สามารถอ่านได้*'}
 
 **คำถามเพิ่มเติม:** ${prompt}
 
