@@ -342,16 +342,16 @@ const Events = () => {
 
       {/* Featured Event */}
       {featuredEvent && (
-        <section className="py-8 sm:py-16 md:py-24 px-0 sm:px-6 relative overflow-hidden">
+        <section className="py-8 sm:py-16 md:py-24 relative overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-b from-primary/5 via-transparent to-transparent" />
           
-          <div className="sm:container mx-auto sm:max-w-6xl relative">
+          <div className="w-[80%] sm:w-full sm:container mx-auto sm:max-w-6xl relative sm:px-6">
             <motion.div
               initial={{ opacity: 0, y: 60 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.8 }}
-              className="text-center mb-6 sm:mb-12 md:mb-16 px-4 sm:px-0"
+              className="text-center mb-6 sm:mb-12 md:mb-16"
             >
               <Badge variant="outline" className="mb-3 sm:mb-4 px-3 sm:px-4 py-1 sm:py-1.5 rounded-full text-xs sm:text-sm">กิจกรรมแนะนำ</Badge>
               <h2 className="text-2xl sm:text-4xl md:text-5xl font-bold tracking-tight">Featured Event</h2>
@@ -363,7 +363,7 @@ const Events = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.2 }}
-                className="group relative rounded-none sm:rounded-[2rem] overflow-hidden bg-card sm:border shadow-2xl"
+                className="group relative rounded-2xl sm:rounded-[2rem] overflow-hidden bg-card border shadow-2xl"
               >
                 <div className="grid lg:grid-cols-2">
                   {/* Image */}
@@ -438,8 +438,8 @@ const Events = () => {
       )}
 
       {/* Events Grid */}
-      <section id="events-grid" className="py-12 sm:py-16 md:py-24 px-4 sm:px-6">
-        <div className="container mx-auto max-w-7xl">
+      <section id="events-grid" className="py-12 sm:py-16 md:py-24">
+        <div className="w-[80%] sm:w-full sm:container mx-auto sm:max-w-7xl sm:px-6">
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
