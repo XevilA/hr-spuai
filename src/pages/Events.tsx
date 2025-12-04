@@ -252,9 +252,10 @@ const Events = () => {
             className="w-full h-full object-cover"
           />
 
-          {/* Gradient Overlays */}
-          <div className="absolute inset-0 bg-gradient-to-b from-background via-background/60 to-background" />
-          <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 via-transparent to-primary/5" />
+          {/* Gradient Overlays - Dark */}
+          <div className="absolute inset-0 bg-black/70" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/50 to-background" />
+          <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 via-transparent to-primary/5" />
         </motion.div>
 
         <motion.div 
