@@ -24,6 +24,7 @@ import { th } from "date-fns/locale";
 
 interface Event {
   id: string;
+  slug: string | null;
   title: string;
   description: string;
   short_description: string | null;
@@ -72,7 +73,7 @@ const EventCard = ({ event, index }: { event: Event; index: number }) => {
         ease: [0.25, 0.1, 0.25, 1]
       }}
     >
-      <Link to={`/events/${event.id}`}>
+      <Link to={`/events/${event.slug || event.id}`}>
         <Card className="group overflow-hidden border-0 bg-card/80 backdrop-blur-sm hover:bg-card transition-all duration-700 cursor-pointer rounded-3xl shadow-lg hover:shadow-2xl hover:shadow-primary/10 hover:-translate-y-2">
           <div className="relative aspect-[16/9] overflow-hidden">
             {event.image_url ? (
@@ -361,7 +362,7 @@ const Events = () => {
               <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Featured Event</h2>
             </motion.div>
 
-            <Link to={`/events/${featuredEvent.id}`}>
+            <Link to={`/events/${featuredEvent.slug || featuredEvent.id}`}>
               <motion.div
                 initial={{ opacity: 0, y: 60 }}
                 whileInView={{ opacity: 1, y: 0 }}
