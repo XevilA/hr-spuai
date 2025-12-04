@@ -29,3 +29,6 @@ verify_jwt = false
 
 [functions.teams]
 verify_jwt = false
+
+[functions.parse-cv]
+verify_jwt = true

@@ -5,9 +5,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, Brain, Mail, MessageSquare, FileText, Loader2, User, FileUp, ExternalLink } from "lucide-react";
+import { Sparkles, Brain, Mail, MessageSquare, FileText, Loader2, User, FileUp, ExternalLink, FileSearch } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 
 type AIModel = 'gemini' | 'deepseek' | 'glm';
@@ -52,6 +53,9 @@ export const AIAssistant = () => {
   const [analysisPrompt, setAnalysisPrompt] = useState('');
   const [analysisResult, setAnalysisResult] = useState('');
   const [loadingApplications, setLoadingApplications] = useState(false);
+  const [enableCvParsing, setEnableCvParsing] = useState(true);
+  const [cvText, setCvText] = useState<string | null>(null);
+  const [parsingCv, setParsingCv] = useState(false);
   
   // Generate Email
   const [emailPrompt, setEmailPrompt] = useState('');
@@ -71,8 +75,10 @@ export const AIAssistant = () => {
     if (selectedApplicationId) {
       const app = applications.find(a => a.id === selectedApplicationId);
       setSelectedApplication(app || null);
+      setCvText(null); // Clear CV text when changing application
     } else {
       setSelectedApplication(null);
+      setCvText(null);
     }
   }, [selectedApplicationId, applications]);
 
@@ -133,13 +139,68 @@ export const AIAssistant = () => {
     }
   };
 
+  const parseCvContent = async (cvPath: string): Promise<string | null> => {
+    setParsingCv(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('parse-cv', {
+        body: { cv_file_path: cvPath }
+      });
+
+      if (error) {
+        console.error('CV Parse Error:', error);
+        toast.error('ไม่สามารถอ่านไฟล์ CV ได้');
+        return null;
+      }
+
+      if (data.error) {
+        console.warn('CV Parse Warning:', data.error);
+        return data.text || null;
+      }
+
+      return data.text;
+    } catch (error: any) {
+      console.error('CV Parse Error:', error);
+      toast.error(`เกิดข้อผิดพลาดในการอ่าน CV: ${error.message}`);
+      return null;
+    } finally {
+      setParsingCv(false);
+    }
+  };
+
+  const handleParseCv = async () => {
+    if (!selectedApplication?.cv_file_path) {
+      toast.error('ผู้สมัครไม่มีไฟล์ CV');
+      return;
+    }
+
+    const text = await parseCvContent(selectedApplication.cv_file_path);
+    if (text) {
+      setCvText(text);
+      toast.success('อ่านเนื้อหา CV สำเร็จ!');
+    }
+  };
+
   const handleAnalyzeApplication = async () => {
     if (!selectedApplication) {
       toast.error('กรุณาเลือกผู้สมัคร');
       return;
     }
 
-    const result = await callAI('analyze-application', analysisPrompt || 'วิเคราะห์ใบสมัครนี้อย่างละเอียด', selectedApplication);
+    let cvContent = cvText;
+    
+    // Auto-parse CV if enabled and has CV file
+    if (enableCvParsing && selectedApplication.cv_file_path && !cvContent) {
+      toast.info('กำลังอ่านเนื้อหาจากไฟล์ CV...');
+      cvContent = await parseCvContent(selectedApplication.cv_file_path);
+    }
+
+    // Create context with CV content if available
+    const analysisContext = {
+      ...selectedApplication,
+      cv_content: cvContent || '[ไม่มีไฟล์ CV หรือไม่สามารถอ่านได้]'
+    };
+
+    const result = await callAI('analyze-application', analysisPrompt || 'วิเคราะห์ใบสมัครนี้อย่างละเอียด รวมถึงข้อมูลจาก CV', analysisContext);
     if (result) {
       setAnalysisResult(result.content);
       toast.success('วิเคราะห์เสร็จสิ้น!');
@@ -398,18 +459,34 @@ export const AIAssistant = () => {
                   )}
 
                   {/* CV & Portfolio Links */}
-                  <div className="flex gap-3 mt-3">
+                  <div className="flex flex-wrap gap-3 mt-3">
                     {selectedApplication.cv_file_path && (
-                      <a 
-                        href={getCvUrl(selectedApplication.cv_file_path) || '#'} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                      >
-                        <FileUp className="w-4 h-4" />
-                        ดู CV/Resume
-                        <ExternalLink className="w-3 h-3" />
-                      </a>
+                      <>
+                        <a 
+                          href={getCvUrl(selectedApplication.cv_file_path) || '#'} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                        >
+                          <FileUp className="w-4 h-4" />
+                          ดู CV/Resume
+                          <ExternalLink className="w-3 h-3" />
+                        </a>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={handleParseCv}
+                          disabled={parsingCv}
+                          className="h-7"
+                        >
+                          {parsingCv ? (
+                            <Loader2 className="w-3 h-3 animate-spin mr-1" />
+                          ) : (
+                            <FileSearch className="w-3 h-3 mr-1" />
+                          )}
+                          อ่านเนื้อหา CV
+                        </Button>
+                      </>
                     )}
                     {selectedApplication.portfolio_url && (
                       <a 
@@ -423,6 +500,29 @@ export const AIAssistant = () => {
                       </a>
                     )}
                   </div>
+
+                  {/* CV Content Preview */}
+                  {cvText && (
+                    <div className="mt-3 p-3 border rounded-lg bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800">
+                      <div className="flex items-center justify-between mb-2">
+                        <h5 className="font-medium text-sm text-green-800 dark:text-green-200 flex items-center gap-1">
+                          <FileSearch className="w-4 h-4" />
+                          เนื้อหาจาก CV ({cvText.length.toLocaleString()} ตัวอักษร)
+                        </h5>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setCvText(null)}
+                          className="h-6 text-xs"
+                        >
+                          ล้าง
+                        </Button>
+                      </div>
+                      <div className="max-h-40 overflow-y-auto text-xs bg-background p-2 rounded border">
+                        <pre className="whitespace-pre-wrap font-sans">{cvText.slice(0, 2000)}{cvText.length > 2000 ? '...' : ''}</pre>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -437,13 +537,31 @@ export const AIAssistant = () => {
                 />
               </div>
 
+              {/* CV Parsing Option */}
+              {selectedApplication?.cv_file_path && (
+                <div className="flex items-center space-x-2 p-3 border rounded-lg bg-muted/20">
+                  <Checkbox
+                    id="enableCvParsing"
+                    checked={enableCvParsing}
+                    onCheckedChange={(checked) => setEnableCvParsing(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="enableCvParsing"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2"
+                  >
+                    <FileSearch className="w-4 h-4 text-primary" />
+                    อ่านและวิเคราะห์เนื้อหาจากไฟล์ CV โดยอัตโนมัติ
+                  </label>
+                </div>
+              )}
+
               <Button 
                 onClick={handleAnalyzeApplication} 
-                disabled={loading || !selectedApplication} 
+                disabled={loading || parsingCv || !selectedApplication} 
                 className="w-full"
               >
-                {loading ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Brain className="w-4 h-4 mr-2" />}
-                วิเคราะห์ใบสมัคร
+                {loading || parsingCv ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Brain className="w-4 h-4 mr-2" />}
+                {parsingCv ? 'กำลังอ่าน CV...' : 'วิเคราะห์ใบสมัคร'}
               </Button>
               
               {analysisResult && (
