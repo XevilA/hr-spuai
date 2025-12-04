@@ -225,6 +225,146 @@ export type Database = {
         }
         Relationships: []
       }
+      event_registrations: {
+        Row: {
+          age: number | null
+          company_name: string | null
+          created_at: string
+          dietary_requirements: string | null
+          email: string
+          event_id: string
+          faculty: string | null
+          full_name: string
+          id: string
+          job_title: string | null
+          major: string | null
+          notes: string | null
+          participant_type: string
+          phone: string | null
+          status: string | null
+          university: string | null
+          university_year: number | null
+          updated_at: string
+        }
+        Insert: {
+          age?: number | null
+          company_name?: string | null
+          created_at?: string
+          dietary_requirements?: string | null
+          email: string
+          event_id: string
+          faculty?: string | null
+          full_name: string
+          id?: string
+          job_title?: string | null
+          major?: string | null
+          notes?: string | null
+          participant_type?: string
+          phone?: string | null
+          status?: string | null
+          university?: string | null
+          university_year?: number | null
+          updated_at?: string
+        }
+        Update: {
+          age?: number | null
+          company_name?: string | null
+          created_at?: string
+          dietary_requirements?: string | null
+          email?: string
+          event_id?: string
+          faculty?: string | null
+          full_name?: string
+          id?: string
+          job_title?: string | null
+          major?: string | null
+          notes?: string | null
+          participant_type?: string
+          phone?: string | null
+          status?: string | null
+          university?: string | null
+          university_year?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_registrations_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          created_at: string
+          description: string
+          end_date: string | null
+          event_date: string
+          event_type: string
+          form_type: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean | null
+          is_featured: boolean | null
+          location: string | null
+          location_url: string | null
+          max_participants: number | null
+          registration_deadline: string | null
+          short_description: string | null
+          tags: string[] | null
+          target_audience: string[] | null
+          title: string
+          updated_at: string
+          video_url: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          end_date?: string | null
+          event_date: string
+          event_type?: string
+          form_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_url?: string | null
+          max_participants?: number | null
+          registration_deadline?: string | null
+          short_description?: string | null
+          tags?: string[] | null
+          target_audience?: string[] | null
+          title: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          end_date?: string | null
+          event_date?: string
+          event_type?: string
+          form_type?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          location?: string | null
+          location_url?: string | null
+          max_participants?: number | null
+          registration_deadline?: string | null
+          short_description?: string | null
+          tags?: string[] | null
+          target_audience?: string[] | null
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+        }
+        Relationships: []
+      }
       positions: {
         Row: {
           created_at: string | null

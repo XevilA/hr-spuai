@@ -19,12 +19,11 @@ const Navbar = () => {
   const navItems = [
     { name: "Home", path: "/" },
     { name: "ตำแหน่ง", path: "/positions" },
+    { name: "กิจกรรม", path: "/events" },
     { name: "โครงการ", path: "/projects" },
     { name: "โครงสร้าง", path: "/community" },
     { name: "ทีมของเรา", path: "/teams" },
-    { name: "ฝ่ายบริหาร", path: "/team" },
     { name: "ติดต่อ", path: "/contact" },
-    { name: "ติดตามสถานะ", path: "/track" },
   ];
 
   return (

@@ -14,6 +14,7 @@ import { EmailLogsViewer } from "@/components/admin/EmailLogsViewer";
 import { LineBroadcastManager } from "@/components/admin/LineBroadcastManager";
 import { AIAssistant } from "@/components/admin/AIAssistant";
 import { TeamMembersManager } from "@/components/admin/TeamMembersManager";
+import { EventsManager } from "@/components/admin/EventsManager";
 import { LogOut } from "lucide-react";
 import { motion } from "framer-motion";
 
@@ -109,6 +110,7 @@ const Admin = () => {
               <TabsTrigger value="team-members">👥 Team</TabsTrigger>
               <TabsTrigger value="projects">Projects</TabsTrigger>
               <TabsTrigger value="positions">Positions</TabsTrigger>
+              <TabsTrigger value="events">🎉 Events</TabsTrigger>
               <TabsTrigger value="emails">Email Templates</TabsTrigger>
               <TabsTrigger value="email-logs">Email Logs</TabsTrigger>
               <TabsTrigger value="line-broadcast">LINE Broadcast</TabsTrigger>
@@ -139,6 +141,10 @@ const Admin = () => {
 
             <TabsContent value="positions">
               <PositionsManager />
+            </TabsContent>
+
+            <TabsContent value="events">
+              <EventsManager />
             </TabsContent>
 
             <TabsContent value="emails">
