@@ -172,6 +172,31 @@ export const EventsManager = () => {
 
   useEffect(() => {
     fetchEventsWithCounts();
+    
+    // Subscribe to realtime changes for event_registrations
+    const channel = supabase
+      .channel('event-registrations-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'event_registrations'
+        },
+        (payload) => {
+          console.log('Realtime registration update:', payload);
+          // Refresh data when any registration changes
+          fetchEventsWithCounts();
+          if (selectedEventId) {
+            fetchRegistrations(selectedEventId);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   useEffect(() => {
