@@ -37,7 +37,10 @@ import {
   Link as LinkIcon,
   Copy,
   ExternalLink,
-  User
+  User,
+  Award,
+  PartyPopper,
+  Megaphone
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { format } from "date-fns";
@@ -137,6 +140,7 @@ export const EventsManager = () => {
   const [selectedRegistrations, setSelectedRegistrations] = useState<string[]>([]);
   const [emailTarget, setEmailTarget] = useState<"all" | "selected" | "single">("all");
   const [singleEmailTarget, setSingleEmailTarget] = useState<Registration | null>(null);
+  const [emailType, setEmailType] = useState<"welcome" | "news" | "certificate">("welcome");
   
   // Check-in state
   const [checkingIn, setCheckingIn] = useState<string | null>(null);
@@ -547,7 +551,8 @@ export const EventsManager = () => {
           subject: emailSubject,
           message: emailMessage,
           recipient_ids: recipientIds,
-          include_qr: includeQR
+          include_qr: emailType === "welcome" ? includeQR : false,
+          email_type: emailType
         }
       });
 
@@ -562,6 +567,7 @@ export const EventsManager = () => {
       setEmailMessage("");
       setSelectedRegistrations([]);
       setSingleEmailTarget(null);
+      setEmailType("welcome");
     } catch (error: any) {
       console.error("Email error:", error);
       toast.error("เกิดข้อผิดพลาดในการส่งอีเมล");
@@ -570,12 +576,26 @@ export const EventsManager = () => {
     }
   };
 
-  const openEmailDialog = (target: "all" | "selected" | "single", registration?: Registration) => {
+  const openEmailDialog = (target: "all" | "selected" | "single", registration?: Registration, type: "welcome" | "news" | "certificate" = "welcome") => {
     const selectedEvent = events.find(e => e.id === selectedEventId);
     setEmailTarget(target);
-    setEmailSubject(`[${selectedEvent?.title || "SPU AI CLUB"}] `);
-    setEmailMessage("");
-    setIncludeQR(true);
+    setEmailType(type);
+    
+    // Set default subject based on email type
+    const eventTitle = selectedEvent?.title || "SPU AI CLUB";
+    if (type === "welcome") {
+      setEmailSubject(`[${eventTitle}] ยืนยันการลงทะเบียน`);
+      setEmailMessage(`ขอบคุณที่ลงทะเบียนเข้าร่วมกิจกรรม ${eventTitle}\n\nเรายินดีที่จะได้พบคุณในกิจกรรม!`);
+      setIncludeQR(true);
+    } else if (type === "news") {
+      setEmailSubject(`[${eventTitle}] ประกาศจากผู้จัด`);
+      setEmailMessage("");
+      setIncludeQR(false);
+    } else if (type === "certificate") {
+      setEmailSubject(`[${eventTitle}] เกียรติบัตรเข้าร่วมกิจกรรม`);
+      setEmailMessage(`ขอแสดงความยินดีที่คุณได้เข้าร่วมกิจกรรม ${eventTitle}\n\nแนบมาพร้อมนี้คือเกียรติบัตรของคุณ ขอบคุณที่ร่วมกิจกรรมกับเรา!`);
+      setIncludeQR(false);
+    }
     
     if (target === "single" && registration) {
       setSingleEmailTarget(registration);
@@ -1493,6 +1513,67 @@ export const EventsManager = () => {
           </DialogHeader>
 
           <div className="space-y-4">
+            {/* Email Type Selection */}
+            <div>
+              <Label className="text-sm font-medium mb-3 block">ประเภทอีเมล</Label>
+              <div className="grid grid-cols-3 gap-3">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailType("welcome");
+                    const selectedEvent = events.find(e => e.id === selectedEventId);
+                    setEmailSubject(`[${selectedEvent?.title || "SPU AI CLUB"}] ยืนยันการลงทะเบียน`);
+                    setIncludeQR(true);
+                  }}
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    emailType === "welcome" 
+                      ? "border-primary bg-primary/10 text-primary" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <PartyPopper className="w-6 h-6 mx-auto mb-1" />
+                  <span className="text-sm font-medium">ต้อนรับ</span>
+                  <p className="text-xs text-muted-foreground">ยืนยันการลงทะเบียน + QR</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailType("news");
+                    const selectedEvent = events.find(e => e.id === selectedEventId);
+                    setEmailSubject(`[${selectedEvent?.title || "SPU AI CLUB"}] ประกาศจากผู้จัด`);
+                    setIncludeQR(false);
+                  }}
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    emailType === "news" 
+                      ? "border-primary bg-primary/10 text-primary" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Megaphone className="w-6 h-6 mx-auto mb-1" />
+                  <span className="text-sm font-medium">ประกาศข่าว</span>
+                  <p className="text-xs text-muted-foreground">แจ้งข้อมูลสำคัญ</p>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEmailType("certificate");
+                    const selectedEvent = events.find(e => e.id === selectedEventId);
+                    setEmailSubject(`[${selectedEvent?.title || "SPU AI CLUB"}] เกียรติบัตรเข้าร่วมกิจกรรม`);
+                    setIncludeQR(false);
+                  }}
+                  className={`p-3 rounded-lg border-2 text-center transition-all ${
+                    emailType === "certificate" 
+                      ? "border-primary bg-primary/10 text-primary" 
+                      : "border-border hover:border-primary/50"
+                  }`}
+                >
+                  <Award className="w-6 h-6 mx-auto mb-1" />
+                  <span className="text-sm font-medium">เกียรติบัตร</span>
+                  <p className="text-xs text-muted-foreground">ส่งเกียรติบัตรให้ผู้เข้าร่วม</p>
+                </button>
+              </div>
+            </div>
+
             <div>
               <Label className="text-sm font-medium">หัวข้ออีเมล</Label>
               <Input
@@ -1513,21 +1594,40 @@ export const EventsManager = () => {
                 className="mt-1.5"
               />
               <p className="text-xs text-muted-foreground mt-1">
-                💡 อีเมลจะถูกจัดรูปแบบให้สวยงามโดยอัตโนมัติ พร้อมข้อมูลกิจกรรมและลิงก์
+                {emailType === "certificate" 
+                  ? "🎓 เกียรติบัตรจะถูกสร้างโดย AI และแนบไปในอีเมลโดยอัตโนมัติ" 
+                  : "💡 อีเมลจะถูกจัดรูปแบบให้สวยงามโดยอัตโนมัติ พร้อมข้อมูลกิจกรรมและลิงก์"}
               </p>
             </div>
 
-            <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
-              <Switch
-                id="include-qr"
-                checked={includeQR}
-                onCheckedChange={setIncludeQR}
-              />
-              <Label htmlFor="include-qr" className="flex items-center gap-2 cursor-pointer">
-                <QrCode className="w-4 h-4 text-primary" />
-                <span>แนบ QR Code สำหรับ Check-in</span>
-              </Label>
-            </div>
+            {emailType === "welcome" && (
+              <div className="flex items-center space-x-3 p-3 bg-muted/50 rounded-lg">
+                <Switch
+                  id="include-qr"
+                  checked={includeQR}
+                  onCheckedChange={setIncludeQR}
+                />
+                <Label htmlFor="include-qr" className="flex items-center gap-2 cursor-pointer">
+                  <QrCode className="w-4 h-4 text-primary" />
+                  <span>แนบ QR Code สำหรับ Check-in</span>
+                </Label>
+              </div>
+            )}
+            
+            {emailType === "certificate" && (
+              <div className="p-4 bg-amber-500/10 border border-amber-500/30 rounded-lg">
+                <div className="flex items-start gap-3">
+                  <Award className="w-5 h-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                  <div className="text-sm">
+                    <p className="font-medium text-amber-700 dark:text-amber-400">เกี่ยวกับเกียรติบัตร</p>
+                    <p className="text-muted-foreground mt-1">
+                      ระบบจะสร้างเกียรติบัตรด้วย AI โดยใช้ชื่อผู้เข้าร่วมและรายละเอียดกิจกรรม 
+                      เกียรติบัตรจะถูกแนบเป็นรูปภาพในอีเมลโดยอัตโนมัติ
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter className="gap-2">
